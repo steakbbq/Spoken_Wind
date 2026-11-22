@@ -1,0 +1,4 @@
+*.ogg binary
+*.png binary
+*.lua text eol=crlf
+*.toc text eol=crlf

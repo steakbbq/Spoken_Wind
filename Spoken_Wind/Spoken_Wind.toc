@@ -1,0 +1,10 @@
+## Interface: 16001, 16002, 16003
+## Title: Spoken Wind
+## Notes: Fart sound on every /fart near you · /wind
+## Version: 0.1.0
+## SavedVariables: SpokenWindDB
+
+Emotes.lua
+Match.lua
+Pick.lua
+Core.lua
