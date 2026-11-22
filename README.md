@@ -2,8 +2,14 @@
 
 ![Spoken Wind](release/logo.png)
 
-WoW Forever addon. **Someone types /fart near you. You hear it.**
+WoW Forever addon. **Spoken** gave the NPCs a voice. **Spoken Wind** gives one to the players.
 
+For years, heroes of Azeroth typed `/fart` and the world stayed silent. A text line. Nothing else. No more.
+Today, every player is finally heard.
+
+**Someone types /fart near you. You hear it.**
+
+- Every player gets a voice. 14 of them, actually.
 - 14 original fart sounds, made from scratch (no samples)
 - Random pick, never the same one twice in a row
 - One sound per 2 s, so spam does not stack
