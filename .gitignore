@@ -5,3 +5,4 @@ stage/
 stage-dev/
 release/*.zip
 tools/sim/out/
+dist/

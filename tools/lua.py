@@ -19,6 +19,8 @@ import sys
 
 # Folder that holds a lua51.dll (LuaJIT). Set LUA51_DLL_DIR to use another one.
 DLL_DIR = os.environ.get("LUA51_DLL_DIR", r"C:\Program Files\obs-studio\bin\64bit")
+# Linux (CI): LuaJIT shared library, e.g. apt install libluajit-5.1-2. LUA51_LIB sets another file.
+SO_NAME = os.environ.get("LUA51_LIB", "libluajit-5.1.so.2")
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TESTS = {"match": "test_match.lua", "pick": "test_pick.lua", "core": "test_core.lua", "board": "test_board.lua", "sim": "test_sim.lua"}
 
@@ -32,8 +34,11 @@ def lens(addon=None):
 
 
 def lua():
-    os.add_dll_directory(DLL_DIR)
-    L = ctypes.CDLL(os.path.join(DLL_DIR, "lua51.dll"))
+    if sys.platform == "win32":
+        os.add_dll_directory(DLL_DIR)
+        L = ctypes.CDLL(os.path.join(DLL_DIR, "lua51.dll"))
+    else:
+        L = ctypes.CDLL(SO_NAME)
     L.luaL_newstate.restype = ctypes.c_void_p
     L.luaL_openlibs.argtypes = [ctypes.c_void_p]
     L.luaL_loadbuffer.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_size_t, ctypes.c_char_p]
