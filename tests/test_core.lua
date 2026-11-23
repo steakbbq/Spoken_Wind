@@ -574,7 +574,7 @@ for i, row in ipairs(CL) do
 		ok("changelog terse: " .. t, #t <= 34 and not t:find("[%.!?]$") and not t:find("%. "), t)
 	end
 end
-ok("changelog 0.7.1", CL[1].v == "0.7.1" and table.concat(CL[1], ",") == "Originals: Classic tier, 1 in 200,Fix: error spam on hidden auras", table.concat(CL[1], ","))
+ok("changelog 0.7.1", CL[1].v == "0.7.1" and table.concat(CL[1], ",") == "Rare Classic farts, 1 in 200,Fix: error spam on hidden auras", table.concat(CL[1], ","))
 ok("changelog 0.7.0", CL[2].v == "0.7.0" and table.concat(CL[2], ",") == "Race voices: 74 per race and body,Collection pages per voice", table.concat(CL[2], ","))
 ok("changelog 0.6.6", CL[3].v == "0.6.6" and table.concat(CL[3], ",") == "Random farts: 1 per hour,Wake-up fart,/wind random off", table.concat(CL[3], ","))
 ok("changelog 0.6.5", CL[4].v == "0.6.5" and table.concat(CL[4], ",") == "Fart button", table.concat(CL[4], ","))
@@ -600,7 +600,7 @@ for _, fs in ipairs(sub and sub.frame.strings or {}) do
 	if fs.y then lowest = math.min(lowest, fs.y) end
 end
 ok("changelog page text", table.concat(texts, "|") ==
-	"Changelog|0.7.1|· Originals: Classic tier, 1 in 200|· Fix: error spam on hidden auras|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|+11 older",
+	"Changelog|0.7.1|· Rare Classic farts, 1 in 200|· Fix: error spam on hidden auras|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|+11 older",
 	table.concat(texts, "|"))
 ok("changelog version gold, lines white", sub and sub.frame.strings[2].font == "GameFontNormal"
 	and sub.frame.strings[3].font == "GameFontHighlight")
@@ -1016,7 +1016,7 @@ ok("nosub: panel=vertical log=section", LastLog():find("panel=vertical log=secti
 local heads = {}
 for _, i in ipairs(reg.layout.inits) do if i.header then heads[#heads + 1] = i.header end end
 ok("nosub: changelog rows", table.concat(heads, "|") ==
-	"Changelog|0.7.1|· Originals: Classic tier, 1 in 200|· Fix: error spam on hidden auras|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|+11 older",
+	"Changelog|0.7.1|· Rare Classic farts, 1 in 200|· Fix: error spam on hidden auras|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|+11 older",
 	table.concat(heads, "|"))
 ok("nosub: changelog rows + the Achievements button (public)", #reg.buttons == 1 and reg.buttons[1].name == "Achievements"
 	and #reg.layout.inits == 25, #reg.layout.inits)

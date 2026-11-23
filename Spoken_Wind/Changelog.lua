@@ -4,7 +4,7 @@
 local _, ns = ...
 
 ns.CHANGELOG = {
-	{ v = "0.7.1", "Originals: Classic tier, 1 in 200", "Fix: error spam on hidden auras" },
+	{ v = "0.7.1", "Rare Classic farts, 1 in 200", "Fix: error spam on hidden auras" },
 	{ v = "0.7.0", "Race voices: 74 per race and body", "Collection pages per voice" },
 	{ v = "0.6.6", "Random farts: 1 per hour", "Wake-up fart", "/wind random off" },
 	{ v = "0.6.5", "Fart button" },

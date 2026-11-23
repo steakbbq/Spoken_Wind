@@ -1317,7 +1317,7 @@ MUTANTS = [
     ('v71 classic not counted', 'Sync.lua', '\t\t\tnClassic = nClassic + 1\n', ''),
     ('v71 classic every pick', 'Sync.lua', 'if snd <= ns.BASE_N then', 'if true then'),
     ('v71 classic SUM lost', 'Sync.lua', '\tparts[#parts + 1] = "classic=" .. nClassic\n', ''),
-    ('v71 changelog row', 'Changelog.lua', '{ v = "0.7.1", "Originals: Classic tier, 1 in 200", "Fix: error spam on hidden auras" },', ''),
+    ('v71 changelog row', 'Changelog.lua', '{ v = "0.7.1", "Rare Classic farts, 1 in 200", "Fix: error spam on hidden auras" },', ''),
     # 0.7.1: hidden (secret) aura data (Random.lua)
     ('v71 secret lists read', 'Random.lua', '\tif Secret(added) or Secret(removed) then return Hidden() end\n', ''),
     ('v71 secret added read', 'Random.lua', 'if Secret(added) or Secret(removed)', 'if Secret(removed)'),
