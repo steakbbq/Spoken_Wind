@@ -5,10 +5,14 @@ Loads the LuaJIT lua51.dll that OBS installs, through ctypes.
   python -I tools/lua.py match   tests/test_match.lua (fart lines, all forms, names, locales)
   python -I tools/lua.py pick    tests/test_pick.lua  (random, never twice in a row)
   python -I tools/lua.py core    tests/test_core.lua  (Core.lua with a fake client)
-  python -I tools/lua.py all     check + all tests
+  python -I tools/lua.py board   tests/test_board.lua (Board.lua: merge, S, Seen, sums; 0.6.4)
+  python -I tools/lua.py sim     tests/test_sim.lua   (gossip simulator, small; full run: python tools/sim/run.py)
+  python -I tools/lua.py all     check (+ dev/Spoken_Wind_Dev if there) + all tests + the length table
+                                 (tools/oglen.py check: Lengths.lua = the ogg files)
 LuaJIT is close to, but not the same as, the game's Lua 5.1.
 """
 import ctypes
+import importlib.util
 import os
 import pathlib
 import sys
@@ -16,7 +20,15 @@ import sys
 # Folder that holds a lua51.dll (LuaJIT). Set LUA51_DLL_DIR to use another one.
 DLL_DIR = os.environ.get("LUA51_DLL_DIR", r"C:\Program Files\obs-studio\bin\64bit")
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-TESTS = {"match": "test_match.lua", "pick": "test_pick.lua", "core": "test_core.lua"}
+TESTS = {"match": "test_match.lua", "pick": "test_pick.lua", "core": "test_core.lua", "board": "test_board.lua", "sim": "test_sim.lua"}
+
+
+def lens(addon=None):
+    """tools/oglen.py check on the addon folder (Lengths.lua = the shipped ogg files)."""
+    spec = importlib.util.spec_from_file_location("oglen", ROOT / "tools" / "oglen.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m.check(addon or ROOT / "Spoken_Wind")
 
 
 def lua():
@@ -71,7 +83,9 @@ if __name__ == "__main__":
     elif mode in TESTS:
         n = test(Lh, TESTS[mode], addon)
     elif mode == "all":
-        n = check(Lh, addon) + sum(test(Lh, t, addon) for t in TESTS.values())
+        dev = ROOT / "dev" / "Spoken_Wind_Dev"   # private repo only
+        n = (check(Lh, addon) + (check(Lh, dev) if dev.is_dir() else 0)
+             + sum(test(Lh, t, addon) for t in TESTS.values()) + lens(addon))
     else:
         print(__doc__)
         n = 1
