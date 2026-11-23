@@ -1,16 +1,12 @@
 -- Spoken Wind: fart log. Every fart that got a sound, kept in SpokenWindDB.farts
 -- (last KEEP rows) + totals today / all time in SpokenWindDB.stats. Names stay in
--- the local save. Page "Fart log" under Options -> AddOns -> Spoken Wind: plain
--- text, newest first, no scroll bar: what fits, then "+N older".
+-- the local save. Page "Fart log" under Options -> AddOns -> Spoken Wind (Options.lua
+-- draws it): totals + rows newest first, in pages.
 local _, ns = ...
 
 local KEEP = 200   -- rows kept in the save
-local SHOW = 26    -- fart rows on the page at most (+ totals + "+N older" = 28 lines)
-local LINE = 16    -- px per line
-local TOP = -40    -- y of the first line (the title sits above)
 
-local db, page
-local strings = {}
+local db
 
 local function Today() return date("%Y-%m-%d") end
 
@@ -43,62 +39,37 @@ function ns.FartLogAdd(emo, who, snd)
 	local s, day = db.stats, Today()
 	if s.day ~= day then s.day, s.today = day, 0 end
 	s.all, s.today = s.all + 1, s.today + 1
-	if page and page:IsVisible() then ns.FartLogDraw() end
+	if ns.FartLogRedraw then ns.FartLogRedraw() end
 end
 
--- { text, font } lines, newest fart first, at most max fart rows.
--- Today: "21:04 · Bob · #4 Trumpet"; older days: "11-20 21:04 · ...".
-function ns.FartLogLines(max)
-	local s, farts, day = db.stats, db.farts, Today()
-	local out = { { ("Today %d · All %d"):format(s.day == day and s.today or 0, s.all), "GameFontNormal" } }
-	local n = #farts
-	local shown = math.min(n, max)
-	for i = n, n - shown + 1, -1 do
+-- { today, all }: today = 0 on a new day (until the first fart of the day).
+function ns.FartLogStats()
+	local s = db.stats
+	return { today = s.day == Today() and s.today or 0, all = s.all }
+end
+
+-- The voice of a sound: "Orig" (the old 14), "Shartifact", or the race voice ("Human M").
+local function Voice(snd)
+	if snd.slot or snd.tier == 7 then return "Shartifact" end
+	local v = snd.race and snd.body and ns.VOX and ns.VOX.voices[snd.race .. "_" .. snd.body]
+	if v then return v.name end
+	return "Orig"
+end
+
+-- The page rows, newest fart first: { when, who, me, num, name, q, voice }.
+-- when: "21:04" today, "11-20 21:04" on older days. name = nil: the sound is gone (num = the saved number).
+function ns.FartLogRows()
+	local out, farts, day = {}, db.farts, Today()
+	for i = #farts, 1, -1 do
 		local r = farts[i]
 		local row = ns.EMOTES[r.e or "FART"]
 		local snd = row and row.sounds[r.snd]
-		local when = date("%Y-%m-%d", r.t) == day and date("%H:%M", r.t) or date("%m-%d %H:%M", r.t)
-		out[#out + 1] = { ("%s · %s · #%d %s%s"):format(when, r.who, snd and snd.num or r.snd, snd and snd.name or "?",
-			r.race and (" · " .. r.race) or ""), "GameFontHighlight" }
+		out[#out + 1] = {
+			when = date("%Y-%m-%d", r.t) == day and date("%H:%M", r.t) or date("%m-%d %H:%M", r.t),
+			who = r.who, me = r.who == "you",
+			num = snd and snd.num or r.snd, name = snd and snd.name or nil,
+			q = snd and snd.q or 1, voice = snd and Voice(snd) or "",
+		}
 	end
-	if n == 0 then out[#out + 1] = { "None yet", "GameFontDisable" } end
-	if n > shown then out[#out + 1] = { "+" .. (n - shown) .. " older", "GameFontDisable" } end
 	return out
-end
-
--- Fart rows that fit the page height (the game sizes canvas pages; unknown -> SHOW).
-local function Fit()
-	local h = page.GetHeight and page:GetHeight()
-	if type(h) == "number" and h > 120 then
-		return math.max(1, math.min(SHOW, math.floor((h + TOP) / LINE) - 2))
-	end
-	return SHOW
-end
-
--- Writes the lines on the page, reusing its font strings (no new frames).
-function ns.FartLogDraw()
-	if not page then return end
-	local lines = ns.FartLogLines(Fit())
-	for i, l in ipairs(lines) do
-		local fs = strings[i]
-		if not fs then
-			fs = page:CreateFontString(nil, "ARTWORK", l[2])
-			fs:SetPoint("TOPLEFT", 16, TOP - (i - 1) * LINE)
-			strings[i] = fs
-		end
-		fs:SetFontObject(l[2])
-		fs:SetText(l[1])
-		fs:Show()
-	end
-	for i = #lines + 1, #strings do
-		strings[i]:SetText("")
-		strings[i]:Hide()
-	end
-end
-
--- Options.lua hands over the page frame; it redraws each time it is shown.
-function ns.FartLogBind(f)
-	page = f
-	f:SetScript("OnShow", ns.FartLogDraw)
-	ns.FartLogDraw()
 end

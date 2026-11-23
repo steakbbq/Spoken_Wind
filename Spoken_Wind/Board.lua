@@ -33,7 +33,7 @@ local TIERS = 7
 B.CFG = { cap = CAP, jump = JUMP, limit = LIMIT, bytes = BYTES, k = 4, top = 2, topN = 10,
 	seenN = 50, seenMin = 20, raise = 0.05, sGap = 2, logMax = 20, seenShow = false,
 	bud = 3000, budNew = nil, capLog = 30 }
-B.TIER_NAMES = { "Poor", "Common", "Uncommon", "Rare", "Epic", "Legend", "Artifact" }
+B.TIER_NAMES = { "Poor", "Common", "Uncommon", "Rare", "Epic", "Legend", "Shartifact" }
 B.TIER_HEX = { "9d9d9d", "ffffff", "1eff00", "0070dd", "a335ee", "ff8000", "e6cc80" }
 local NUMS = { "f", "h", "l" }
 
@@ -340,9 +340,10 @@ function B.GotS(st, text, sender, now)
 end
 
 -- ------------------------------------------------------------ sums
--- All: own characters + the board, hidden left out. Heard = the sum of l (one side only).
+-- All: own characters + the board, hidden left out. Heard = the sum of l (one side only). pb = board players only
+-- (other players met; the window's "SW players met" tag).
 function B.All(st)
-	local f, l, p, oldest = 0, 0, 0, nil
+	local f, l, p, pb, oldest = 0, 0, 0, 0, nil
 	local t = { 0, 0, 0, 0, 0, 0, 0 }
 	local function Add(e)
 		if e.hide == 1 then return end
@@ -352,9 +353,10 @@ function B.All(st)
 	for _, c in pairs(st.chars) do Add(c) end
 	for _, e in pairs(st.board) do
 		Add(e)
+		if e.hide ~= 1 then pb = pb + 1 end
 		if e.hide ~= 1 and (not oldest or (e.at or 0) < oldest) then oldest = e.at end
 	end
-	return { f = f, l = l, p = p, t = t, oldest = oldest }
+	return { f = f, l = l, p = p, pb = pb, t = t, oldest = oldest }
 end
 
 -- ------------------------------------------------------------ board tab

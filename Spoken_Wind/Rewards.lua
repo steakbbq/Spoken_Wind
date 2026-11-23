@@ -6,10 +6,7 @@
 -- an event or a loop. Locked = one local line, no chat.
 -- Commands are made at PLAYER_LOGIN (all addons loaded). A word the game or
 -- another addon owns is skipped, never overwritten.
--- Rewards button (Options, default on): a small movable button. Left click = the
--- achievements window (Achievements.lua), right click = the 5x3 reward grid. The Fart button
--- (Button.lua) sits right of it and shows with it.
--- Own frames only. No mouse in combat, no keys in combat, no pad, no bindings.
+-- The buttons bar (Options: Rewards button, default on) and the rewards popup: Bar.lua.
 local _, ns = ...
 
 -- Order = ns.ACH order (the 15 main rows). snd = sound number in the fart set.
@@ -36,21 +33,13 @@ local byText = {}
 for i, r in ipairs(REWARDS) do byText[r.text] = i end
 
 local SEND_GAP = 1                          -- s between two reward lines (a double click = one line)
-local BTN, CELL, GAP, PAD, COLS = 32, 40, 6, 10, 5
-local ROWS = math.ceil(#REWARDS / COLS)
-local HOVER_H = 42                          -- three small lines under the grid
-local POP_W = 2 * PAD + COLS * CELL + (COLS - 1) * GAP
-local POP_H = 2 * PAD + ROWS * CELL + (ROWS - 1) * GAP + 6 + HOVER_H
-ns.REWARD_POP = { w = POP_W, h = POP_H, cell = CELL, gap = GAP, pad = PAD, cols = COLS }
 
 local db, lastSend
-local btn, pop, hover
-local cells = {}
 
 -- Reward number of an exact emote line, else nil.
 function ns.RewardByText(text) return byText[text] end
 
--- Core calls this at ADDON_LOADED: checks the saved button spot.
+-- Core calls this at ADDON_LOADED: checks the saved bar spot.
 function ns.RewardInit(saved)
 	db = saved
 	local p = db.rwpos
@@ -58,9 +47,8 @@ function ns.RewardInit(saved)
 		db.rwpos = nil
 	end
 	lastSend = nil
+	if ns.BarInit then ns.BarInit(db) end
 end
-
-local function InCombat() return InCombatLockdown and InCombatLockdown() end
 
 local function Send(text)
 	local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
@@ -126,185 +114,8 @@ function ns.RewardSetup()
 	return n
 end
 
--- ------------------------------------------------------------ button + grid
-local function Head()
-	local n = 0
-	for _, r in ipairs(REWARDS) do if ns.AchHas(r.ach) then n = n + 1 end end
-	return ("Rewards %d/%d"):format(n, #REWARDS) .. (ns.HeardHead and ns.HeardHead() or "")
-end
-
-local function HoverText(i)
-	local r = REWARDS[i]
-	local row = ns.AchRow(r.ach)
-	if ns.AchHas(r.ach) then return ns.AchColor(row.q) .. r.cmd .. "|r · " .. row.name end
-	return "|cff9d9d9d" .. row.name .. " · " .. row.rule .. "|r"
-end
-
-local function Refresh()
-	for i, c in ipairs(cells) do
-		local has = ns.AchHas(REWARDS[i].ach)
-		c.icon:SetDesaturated(not has)
-		ns.AchRingPaint(c.ring, ns.AchRow(REWARDS[i].ach).q, has)
-	end
-	if hover then hover:SetText(Head()) end
-end
-
--- Achievements.lua calls this on each earn: an open grid shows it at once.
-function ns.RewardRefresh()
-	if pop and pop:IsShown() then Refresh() end
-end
-
--- Above the button; below it when the top of the screen is too close.
-local function PlacePop()
-	pop:ClearAllPoints()
-	local top = btn:GetTop()
-	local uh = UIParent.GetHeight and UIParent:GetHeight()
-	if top and uh and top + 4 + POP_H > uh then
-		pop:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -4)
-	else
-		pop:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 4)
-	end
-end
-
-local function BuildPop()
-	pop = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-	pop:SetSize(POP_W, POP_H)
-	pop:SetFrameStrata("DIALOG")
-	pop:SetClampedToScreen(true)
-	if pop.SetBackdrop then pop:SetBackdrop(BACKDROP_TOAST_12_12 or ns.TOAST_ART) end
-	pop:EnableMouse(true)   -- a click on a gap does not fall through
-	pop:Hide()
-	for i = 1, #REWARDS do
-		local c = CreateFrame("Frame", nil, pop)
-		c:SetSize(CELL, CELL)
-		c:SetPoint("TOPLEFT", pop, "TOPLEFT", PAD + ((i - 1) % COLS) * (CELL + GAP),
-			-PAD - math.floor((i - 1) / COLS) * (CELL + GAP))
-		c.icon = c:CreateTexture(nil, "ARTWORK")
-		c.icon:SetSize(CELL, CELL)
-		c.icon:SetPoint("TOPLEFT", c, "TOPLEFT", 0, 0)
-		c.icon:SetTexture(ns.AchIcon(ns.AchRow(REWARDS[i].ach)))
-		c.ring = c:CreateTexture(nil, "OVERLAY")   -- quality ring (grey = locked)
-		c.ring:SetSize(CELL, CELL)
-		c.ring:SetPoint("TOPLEFT", c, "TOPLEFT", 0, 0)
-		c:EnableMouse(true)
-		c:SetScript("OnEnter", function() hover:SetText(HoverText(i)) end)
-		c:SetScript("OnLeave", function() hover:SetText(Head()) end)
-		c:SetScript("OnMouseUp", function(_, button)
-			if button ~= "LeftButton" then return end
-			if ns.RewardUse(i, "button") then pop:Hide() end
-		end)
-		cells[i] = c
-	end
-	hover = pop:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-	hover:SetPoint("TOPLEFT", pop, "TOPLEFT", PAD, -(PAD + ROWS * CELL + (ROWS - 1) * GAP + 6))
-	hover:SetWidth(POP_W - 2 * PAD)
-	hover:SetJustifyH("LEFT")
-	hover:SetWordWrap(true)
-	-- Esc closes; every other key goes on to the game (keys only out of combat).
-	pop:SetScript("OnKeyDown", function(self, key)
-		if InCombat() then return end
-		if key == "ESCAPE" then
-			self:SetPropagateKeyboardInput(false)
-			self:Hide()
-		else
-			self:SetPropagateKeyboardInput(true)
-		end
-	end)
-	-- A click outside the grid and the button closes it.
-	pop:SetScript("OnEvent", function(self, event)
-		if event == "GLOBAL_MOUSE_DOWN" and not self:IsMouseOver() and not btn:IsMouseOver() then self:Hide() end
-	end)
-	pop:SetScript("OnHide", function(self)
-		self:EnableKeyboard(false)
-		pcall(self.UnregisterEvent, self, "GLOBAL_MOUSE_DOWN")
-	end)
-end
-
-local function Toggle()
-	if InCombat() then return end
-	if not pop then BuildPop() end
-	if pop:IsShown() then pop:Hide() return end
-	PlacePop()
-	Refresh()
-	pop:Show()
-	pop:EnableKeyboard(true)
-	pop:SetPropagateKeyboardInput(true)
-	pcall(pop.RegisterEvent, pop, "GLOBAL_MOUSE_DOWN")
-end
-
-local function PlaceBtn()
-	btn:ClearAllPoints()
-	local p = db.rwpos
-	if p then
-		btn:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", p.x, p.y)
-	else
-		btn:SetPoint("LEFT", UIParent, "LEFT", 40, 0)
-	end
-end
-
-local function BuildBtn()
-	btn = CreateFrame("Frame", nil, UIParent)
-	btn:SetSize(BTN, BTN)
-	btn:SetFrameStrata("MEDIUM")
-	btn:SetClampedToScreen(true)
-	btn:SetMovable(true)
-	btn.icon = btn:CreateTexture(nil, "ARTWORK")
-	btn.icon:SetSize(BTN, BTN)
-	btn.icon:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
-	btn.icon:SetTexture(ns.AchIcon(ns.AchRow("first")))
-	btn:SetAlpha(0.85)
-	btn:EnableMouse(not InCombat())
-	btn:RegisterForDrag("LeftButton")
-	btn:SetScript("OnEnter", function(self)
-		self:SetAlpha(1)
-		if ns.HeardHover then ns.HeardHover(true) end
-	end)
-	btn:SetScript("OnLeave", function(self)
-		self:SetAlpha(0.85)
-		if ns.HeardHover then ns.HeardHover(false) end
-	end)
-	btn:SetScript("OnMouseDown", function(self) self.moved = false end)
-	btn:SetScript("OnDragStart", function(self)
-		if InCombat() then return end
-		self.moved = true
-		self:StartMoving()
-	end)
-	btn:SetScript("OnDragStop", function(self)
-		self:StopMovingOrSizing()
-		local l, b = self:GetLeft(), self:GetBottom()
-		if l and b then db.rwpos = { x = math.floor(l + 0.5), y = math.floor(b + 0.5) } end
-		PlaceBtn()
-	end)
-	btn:SetScript("OnMouseUp", function(self, button)
-		if self.moved then self.moved = false return end
-		if button == "LeftButton" then
-			if ns.AchToggle then ns.AchToggle() end
-		elseif button == "RightButton" then
-			Toggle()
-		end
-	end)
-	-- Combat: grid shut, button takes no mouse (never in the way).
-	btn:RegisterEvent("PLAYER_REGEN_DISABLED")
-	btn:RegisterEvent("PLAYER_REGEN_ENABLED")
-	btn:SetScript("OnEvent", function(self, event)
-		if event == "PLAYER_REGEN_DISABLED" and pop then pop:Hide() end
-		self:EnableMouse(event == "PLAYER_REGEN_ENABLED")
-	end)
-	PlaceBtn()
-end
-
--- Shows or hides the button per db.rwbtn (Options checkbox). Made on first use.
+-- ------------------------------------------------------------ the bar (Bar.lua)
+-- Shows or hides the bar per db.rwbtn (Options checkbox).
 function ns.RewardSync()
-	if db.rwbtn then
-		if not btn then BuildBtn() end
-		btn:Show()
-		if ns.BtnSync then ns.BtnSync(btn, true) end   -- the Fart button, right of it
-	elseif btn then
-		btn:Hide()
-		if pop then pop:Hide() end
-		if ns.BtnSync then ns.BtnSync(btn, false) end
-	end
-	if ns.HeardDraw then ns.HeardDraw() end   -- button off = no Heard text
+	if ns.BarSync then ns.BarSync() end
 end
-
-function ns.RewardFrames() return btn, pop, cells, hover end

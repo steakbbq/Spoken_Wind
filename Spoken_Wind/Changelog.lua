@@ -4,6 +4,7 @@
 local _, ns = ...
 
 ns.CHANGELOG = {
+	{ v = "0.8.4", "New look for every window", "Credits page", "Fart button: whispers left", "Right-click Fart = /say", "Artifact tier is now Shartifact" },
 	{ v = "0.7.1", "Rare Classic farts, 1 in 200", "Fix: error spam on hidden auras" },
 	{ v = "0.7.0", "Race voices: 74 per race and body", "Collection pages per voice" },
 	{ v = "0.6.6", "Random farts: 1 per hour", "Wake-up fart", "/wind random off" },
@@ -21,4 +22,14 @@ ns.CHANGELOG = {
 	{ v = "0.2.1", "Test: dev only" },
 	{ v = "0.2.0", "Cooldown per person", "Options page", "Changelog" },
 	{ v = "0.1.0", "First release", "14 toots", "/wind commands" },
+}
+
+-- Credits (Options -> AddOns -> Spoken Wind -> Credits). author = the toc ## Author.
+-- { name, class token }: the name shows in its class color. Testers: only the names they asked for,
+-- spelled as in the game, first tester first. inspired = the "Inspired by" text, shown as is (approved
+-- text: no word changes without a new OK).
+ns.CREDITS = {
+	author = { "Hals Dunngold", "HUNTER" },
+	testers = { { "Bumm Farto", "PRIEST" }, { "Chrissy Walnutz", "WARRIOR" } },
+	inspired = "I really like the Spoken addon. It gives the NPCs a voice, so I started thinking about which emotes I could make sound effects for. I landed on /fart, because a fart addon with way too much effort put into it felt perfect. Spoken Wind isn't made by the Spoken team. And no, I don't have a fart fetish.",
 }

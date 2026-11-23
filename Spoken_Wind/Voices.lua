@@ -212,7 +212,7 @@ function ns.VoxPages()
 		return p
 	end
 	for _, v in ipairs(VOX.order) do out[#out + 1] = Page(v.name, v.all, true) end
-	out[#out + 1] = Page("Artifact", VOX.art, false)
+	out[#out + 1] = Page("Shartifact", VOX.art, false)
 	return out
 end
 

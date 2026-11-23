@@ -2,8 +2,9 @@
 -- /wind pair [name]: pairs with ONE partner who runs it too (a name, the target,
 --   or the one party member). Off by default, off at logout, /wind pair off or End.
 -- Talks only to the partner: hidden addon messages (prefix SpWind, kind T) on
---   WHISPER, each under 255 bytes, results 1 message per second. Nothing other
---   players can see.
+--   WHISPER (on the group channel when the partner is in my group; only the
+--   partner's are read), each under 255 bytes, results 1 message per second.
+--   Nothing other players can see. No answer: HI again every 3 s, 60 s max.
 -- Never sends an emote: every fart is a player's own key press. Test mode only
 --   changes this addon's own sync message (none, or sent 100 / 400 ms late) and
 --   what it logs.
@@ -21,6 +22,8 @@ local PACE = 1          -- s between two results messages
 local PINGS = 3
 local TICK_MAX = 2.5    -- s to see the server second change
 local RETRY = 1.5       -- s: the partner had no tick yet, ping again (3 times max)
+local HELLO_EVERY = 3   -- s: HI again until the partner answers
+local HELLO_MAX = 60    -- s: then "no hello" (the partner never ran /wind pair)
 local MATCH_S = 2       -- s: the same fart on both clients
 local REC_MAX = 200
 local LINE_MAX = 300
@@ -45,7 +48,7 @@ local WHY = { "edge", "kdrift", "late", "lost", "hash" }
 local db, T             -- T = db.test (saved)
 local S                 -- this test's live state (not saved): tick, pings, queues
 local win               -- the window (made on first use)
-local Refresh, Stop
+local Refresh, Stop, InMyGroup
 
 local function Fresh() return { pings = {}, nPing = 0, retry = 0, sent = {}, inb = {}, q = {} } end
 
@@ -57,13 +60,8 @@ local function Ms(dt) return math.floor(dt * 1000 + 0.5) end
 local function G8(guid) return Usable(guid) and guid:sub(-8) or "?" end
 local function Short(name) return Usable(name) and (name:match("^[^%-]+") or name) or "?" end
 
--- Same player? "Name" matches "Name-Realm"; case and spaces do not count.
-local function SameName(a, b)
-	if not (Usable(a) and Usable(b)) then return false end
-	local na, ra = a:gsub("%s", ""):lower():match("^([^%-]+)%-?(.*)$")
-	local nb, rb = b:gsub("%s", ""):lower():match("^([^%-]+)%-?(.*)$")
-	return na ~= nil and na == nb and (ra == "" or rb == "" or ra == rb)
-end
+-- Same player? The shared compare (Button.lua): "First" = "First Surname" = "First-Surname".
+local function SameName(a, b) return ns.SameName(a, b) end
 ns.TestSameName = SameName
 
 local function MyFaction()
@@ -77,14 +75,25 @@ local function TLog(s)
 	while #l > LINE_MAX do table.remove(l, 1) end
 end
 
--- One hidden addon message to the partner only (WHISPER). true = the client took it.
+-- The group channel, as Sync picks it: instance group = INSTANCE_CHAT, raid = RAID, else PARTY.
+local function GroupChan()
+	local home, inst = LE_PARTY_CATEGORY_HOME, LE_PARTY_CATEGORY_INSTANCE
+	if home and inst and IsInGroup and IsInGroup(inst) and not IsInGroup(home) then return "INSTANCE_CHAT" end
+	return IsInRaid and IsInRaid() and "RAID" or "PARTY"
+end
+local GROUP = { PARTY = true, RAID = true, INSTANCE_CHAT = true }
+
+-- One hidden addon message to the partner only: the group channel when the partner is in my group
+-- (the partner reads only mine there), else WHISPER. true = the client took it.
 local function Raw(body)
 	if not (T and T.on and Usable(T.partner)) then return false end
 	local fn = C_ChatInfo and C_ChatInfo.SendAddonMessage or SendAddonMessage
 	if not fn then return false end
 	local msg = KIND .. body
 	if #msg > LONG then TLog("ERR long " .. #msg) return false end
-	local ok, res = pcall(fn, ns.SYNC.prefix, msg, "WHISPER", T.partner)
+	local ch, to = "WHISPER", T.partner
+	if InMyGroup(T.partner) then ch, to = GroupChan(), nil end
+	local ok, res = pcall(fn, ns.SYNC.prefix, msg, ch, to)
 	local good = ok and (res == nil or res == true or res == 0)
 	if not good then
 		T.bad = (T.bad or 0) + 1
@@ -169,6 +178,25 @@ local function Hello(kind)
 	return Raw(("%s:%s:%s:%s:%d:%d:%.0f"):format(kind, guid, ns.VERSION or "?", MyFaction(), seed, n, T.id))
 end
 
+-- No answer yet: HI again every HELLO_EVERY s (a hidden addon message, never chat). After HELLO_MAX s:
+-- "PAIR nohello" once, the window shows it. A late HI from the partner still pairs.
+local function HelloAgain()
+	if not (C_Timer and C_Timer.After) then return end
+	local s, k = S, 0
+	local function Again()
+		if S ~= s or not T.on or T.paired then return end
+		k = k + 1
+		if k * HELLO_EVERY >= HELLO_MAX then
+			T.nohello = true
+			TLog("PAIR nohello")
+			return Refresh()
+		end
+		Hello("HI")
+		C_Timer.After(HELLO_EVERY, Again)
+	end
+	C_Timer.After(HELLO_EVERY, Again)
+end
+
 local function OnHello(kind, rest, sender)
 	local guid, ver, fac, seed, n, id = rest:match("^([%w%-]+):([%w%.]+):([%a%?]+):(%d+):(%d+):(%d+)$")
 	if not guid then return end
@@ -186,7 +214,7 @@ local function OnHello(kind, rest, sender)
 	T.seed = (tonumber(seed) == mySeed and tonumber(n) == myN) and "match" or "DIFF"
 	if ns.SyncKnow then ns.SyncKnow(guid, "pair") end
 	local was = T.paired
-	T.paired = true
+	T.paired, T.nohello = true, nil
 	if not was then
 		TLog(("PAIR ok side=%d seed=%s ver=%s pver=%s pg=%s"):format(T.side, T.seed, tostring(ns.VERSION), ver, G8(guid)))
 	end
@@ -202,12 +230,13 @@ local function UnitFull(u)
 	return Usable(r) and (n .. "-" .. r) or n
 end
 
--- Partner name + a unit for it (for the faction check), else nil.
+-- Partner name + a unit for it (for the faction check), else nil. A typed name that is the target or a
+-- party member = that unit's full name (Forever: "First Surname" typed, "First-Surname" from the unit).
 local function Resolve(arg)
 	if arg ~= "" then
 		for _, u in ipairs({ "target", "party1", "party2", "party3", "party4" }) do
 			local full = UnitFull(u)
-			if full and SameName(full, arg) then return arg, u end
+			if full and SameName(full, arg) then return full, u end
 		end
 		return arg, nil
 	end
@@ -228,7 +257,7 @@ local function OtherSide(unit)
 	return Usable(his) and Usable(mine) and his ~= mine
 end
 
-local function InMyGroup(name)
+function InMyGroup(name)
 	local n = GetNumGroupMembers and GetNumGroupMembers() or 0
 	if n == 0 then return false end
 	local raid = IsInRaid and IsInRaid()
@@ -506,9 +535,11 @@ local function OnChunk(rest)
 	Compute()
 end
 
--- Every T message (Sync routes them here). Only from the partner, only on WHISPER.
+-- Every T message (Sync routes them here). Only from the partner, only on WHISPER or (partner in my group)
+-- the group channel.
 function ns.TestMessage(text, channel, sender)
-	if not (T and T.on) or channel ~= "WHISPER" or not SameName(sender, T.partner) then return end
+	if not (T and T.on) or not SameName(sender, T.partner) then return end
+	if not (channel == "WHISPER" or (GROUP[channel] and InMyGroup(T.partner))) then return end
 	local kind, rest = text:match("^T:1:(%u%u):?(.*)$")
 	if kind == "HI" or kind == "OK" then return OnHello(kind, rest, sender) end
 	if not T.paired then return end
@@ -593,7 +624,7 @@ function Refresh()
 	local head = "Wind test · " .. Short(T.partner)
 	if T.xf then head = head .. " · xfaction: no msgs"
 	elseif not T.on then head = head .. " · end"
-	elseif not T.paired then head = head .. " · wait" end
+	elseif not T.paired then head = head .. (T.nohello and " · no hello" or " · wait") end
 	L[1] = head
 	if not T.xf then
 		local c = T.clock
@@ -603,7 +634,7 @@ function Refresh()
 		local step = sg and ("Step %s · %s /fart %d/%d%s"):format(sg.id, Who(sg.side), T.cnt or 0, sg.goal,
 			sg.mode ~= "norm" and (" · " .. sg.mode) or "") or "Done · Send"
 		if S.q[1] then step = step .. (" · sending %d"):format(#S.q) end
-		if T.on and not T.paired then step = "partner: /wind pair " .. tostring(UnitName and UnitName("player") or "?") end
+		if T.on and not T.paired then step = "partner: target me + /wind pair" end
 		L[3] = step
 		for _, l in ipairs(T.result and T.result.lines or {}) do L[#L + 1] = l end
 	end
@@ -675,6 +706,7 @@ function ns.TestCmd(arg)
 	end
 	TickStart()
 	Hello("HI")
+	HelloAgain()
 	Refresh()
 end
 

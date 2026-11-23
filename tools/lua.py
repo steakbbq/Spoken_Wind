@@ -51,15 +51,16 @@ def lua():
 
 def check(L, folder=None):
     bad = 0
-    for f in sorted((folder or ROOT / "Spoken_Wind").glob("*.lua")):
+    base = folder or ROOT / "Spoken_Wind"
+    for f in sorted(base.glob("*.lua")) + sorted(base.glob("UI/*.lua")):   # UI/: the generated screens + Look.lua
         src = f.read_bytes()
         s = L.luaL_newstate()
-        rc = L.luaL_loadbuffer(s, src, len(src), ("=" + f.name).encode())
+        rc = L.luaL_loadbuffer(s, src, len(src), ("=" + f.relative_to(base).as_posix()).encode())
         if rc != 0:
             bad += 1
             print("FAIL", L.lua_tolstring(s, -1, None).decode(errors="replace"))
         else:
-            print("ok  ", f.name)
+            print("ok  ", f.relative_to(base).as_posix())
         L.lua_close(s)
     return bad
 

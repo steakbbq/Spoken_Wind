@@ -12,7 +12,7 @@
 -- One sound per person at a time: a person is busy from the play start for
 -- max(cd, the sound's length) (ns.LEN, Lengths.lua, made from the ogg files).
 local ADDON, ns = ...
-local VERSION = "0.7.1"
+local VERSION = "0.8.4"
 local TAG = "|cff9fd8a8Spoken Wind|r"
 local SLASH = "/wind"
 local CHANNELS = { master = "Master", sfx = "SFX", dialog = "Dialog" }
@@ -264,28 +264,23 @@ end
 local function Say(s) print(TAG .. " " .. s) end
 ns.Say = Say
 
--- One way to change a setting (/wind and reset). With the options page, its
--- own setting object writes the value, so the page shows it at once.
-local fromSlash = false
-local function Set(key, value)
+-- One way to change a setting (/wind, reset, the hello note). by: "slash" or "hello".
+-- The options page shows the new value at once (ns.OptRedraw).
+local function Set(key, value, by)
+	by = by or "slash"
 	if db[key] == value then return end
-	local s = ns.panelSettings and ns.panelSettings[key]
-	if s then
-		fromSlash = true
-		pcall(s.SetValue, s, value)   -- writes db[key]; its callback logs OPT
-		fromSlash = false
-	end
-	if db[key] ~= value then
-		db[key] = value
-		Log(("OPT %s=%s by=slash"):format(key, tostring(value)))
-		if key == "rwbtn" and ns.RewardSync then pcall(ns.RewardSync) end
-		if key == "random" and ns.RandOpt then pcall(ns.RandOpt) end
-	end
+	db[key] = value
+	Log(("OPT %s=%s by=%s"):format(key, tostring(value), by))
+	if key == "rwbtn" and ns.RewardSync then pcall(ns.RewardSync) end
+	if key == "random" and ns.RandOpt then pcall(ns.RandOpt) end
+	if ns.OptRedraw then pcall(ns.OptRedraw) end
 end
+
+ns.SetOpt = Set   -- the hello note: the Random switch
 
 -- The options page calls this after it changed db[key].
 function ns.OnOpt(key)
-	Log(("OPT %s=%s by=%s"):format(key, tostring(db[key]), fromSlash and "slash" or "panel"))
+	Log(("OPT %s=%s by=panel"):format(key, tostring(db[key])))
 	if key == "rwbtn" and ns.RewardSync then
 		local ok, err = pcall(ns.RewardSync)
 		if not ok then sums.err = sums.err + 1 Log("ERR rw " .. tostring(err)) end
@@ -524,12 +519,21 @@ ev:SetScript("OnEvent", function(self, event, a1, a2, a3, a4, _, _, _, _, _, _, 
 			local okR, err = pcall(ns.RandLogin)
 			if not okR then sums.err = sums.err + 1 Log("ERR rand " .. tostring(err)) end
 		end
+		local font = "-1"   -- the 3 shipped fonts: each tested once (Screens.lua); ok = all loaded. Before the bar.
+		if ns.UIFonts then
+			local okF, f = pcall(ns.UIFonts)
+			if okF then font = f else sums.err = sums.err + 1 Log("ERR font " .. tostring(f)) end
+		end
 		if ns.RewardSetup then
 			local okR, n = pcall(ns.RewardSetup)
 			rw = okR and n or -1
 			if not okR then sums.err = sums.err + 1 Log("ERR rw " .. tostring(n)) end
 			local okS, err = pcall(ns.RewardSync)
 			if not okS then sums.err = sums.err + 1 Log("ERR rw " .. tostring(err)) end
+		end
+		if ns.BarLogin then   -- the first login on this account: the hello note under the bar
+			local okH, err = pcall(ns.BarLogin)
+			if not okH then sums.err = sums.err + 1 Log("ERR hello " .. tostring(err)) end
 		end
 		local loc = GetLocale and GetLocale() or "?"
 		local srcs = ns.SetLocale(loc)
@@ -542,7 +546,7 @@ ev:SetScript("OnEvent", function(self, event, a1, a2, a3, a4, _, _, _, _, _, _, 
 				if type(ms) == "number" and ms > 0 then nLen = nLen + 1 end
 			end
 		end
-		Log(("BOOT v=%s loc=%s emotes=%s slash=%s clash=%d panel=%s log=%s flog=%s farts=%d ach=%s done=%d rw=%d btn=%d sync=%d/%d wait=%d tm=%d on=%d ch=%s self=%d cd=%s n=%d len=%d/%d dex=%d %s %s %s rev=%d dev=%d %s %s"):format(
+		Log(("BOOT v=%s loc=%s emotes=%s slash=%s clash=%d panel=%s log=%s flog=%s farts=%d ach=%s done=%d rw=%d btn=%d sync=%d/%d wait=%d tm=%d on=%d ch=%s self=%d cd=%s n=%d len=%d/%d dex=%d %s %s %s rev=%d dev=%d %s %s cred=%s font=%s"):format(
 			VERSION, loc, table.concat(parts, ","), SLASH, SlashClash(), panel, tostring(ns.changelog), tostring(ns.fartlog),
 			#db.farts, tostring(ns.achpage), ns.AchDone and ns.AchDone() or 0, rw, db.rwbtn and 1 or 0,
 			ns.syncPrefix or -1, ns.syncHooks or 0, db.wait, ns.TestCmd and 1 or 0, db.on and 1 or 0, db.ch, db.self and 1 or 0,
@@ -550,7 +554,7 @@ ev:SetScript("OnEvent", function(self, event, a1, a2, a3, a4, _, _, _, _, _, _, 
 			ns.BoardBoot and (function() local ok, s = pcall(ns.BoardBoot) return ok and s or "board=-1" end)() or "board=-1",
 			ns.RandBoot and ns.RandBoot() or "rnd=-1", nRandEv, Dev() and 1 or 0,
 			ns.VoxBoot and (function() local ok, s = pcall(ns.VoxBoot) return ok and s or "set=-1" end)() or "set=-1",
-			ns.ArtBoot and (function() local ok, s = pcall(ns.ArtBoot) return ok and s or "art=-1" end)() or "art=-1"))
+			ns.ArtBoot and (function() local ok, s = pcall(ns.ArtBoot) return ok and s or "art=-1" end)() or "art=-1", tostring(ns.credits), font))
 	elseif event == "PLAYER_LOGOUT" and db then
 		local parts = {}
 		for _, k in ipairs({ "seen", "hit", "played", "nosound", "cd", "off", "selfskip", "err" }) do

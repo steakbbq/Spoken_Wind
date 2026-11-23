@@ -1,49 +1,40 @@
--- Spoken Wind: achievement toast. OUR OWN frame, made to look like the game's
--- achievement alert (the game's own art in Interface\AchievementFrame), in the
--- friend toast's corner. Never AchievementAlertSystem, AlertFrame, BNToastFrame or
--- any other Blizzard frame: BNToastFrame's spot is only read.
--- Show: slide up + fade in, a glow, a shine sweep, the game's toast sound (Sound
--- On only, max one per SOUND_GAP s). SHOW s, fade FADE s, then the next one in the
--- queue. A click hides it; a left click also opens the achievements window on the
--- row's tab with its tile glowing (ns.AchShow). The mouse on it holds the fade.
--- No mouse in combat or while hidden, no key or pad binding.
--- Text: both strings center on the art's plate (PLATE), not on the toast frame.
--- Art missing on this client: that texture hides; no alert background = the
--- friend toast backdrop (the 0.4 look, bigger). Made on the first toast only.
+-- Spoken Wind: achievement toast (0.8.0 UI: sw-toast). OUR OWN frame SpokenWindToast, above the bar
+-- (above the rewards popup while it is open over the bar). Bar off: the friend toast's corner (BNToastFrame
+-- is only read), else above the chat. Never AchievementAlertSystem, AlertFrame, BNToastFrame or any other
+-- Blizzard frame.
+-- Show: slide up + fade in, the game's toast sound (Sound On only, max one per SOUND_GAP s). SHOW s, fade
+-- FADE s, then the next one in the queue. A click hides it; a left click also opens the achievements window
+-- on the row's tab with its tile glowing (ns.AchShow). The mouse on it holds the fade.
+-- No mouse in combat or while hidden, no key or pad binding. Made on the first toast only.
+-- Text: "Achievement" + the reward command (a row with a reward), the name in its quality color, the rule.
 local _, ns = ...
+local Look, Looks = ns.Look, ns.Looks
 
 local SHOW, FADE, IN = 6, 0.5, 0.25
-local W, H, ICON, ICON_FRAME = 360, 100, 48, 70
 local SLIDE = 24              -- px it slides up on show
-local GLOW_T, SHINE_T = 0.6, 0.9
-local SHINE_W, SHINE_H = 80, 82
+local GAP = 8                 -- px above the bar (or the open rewards popup)
 local SOUND_GAP = 1           -- s: toasts back to back = one sound
 local SOUND_ID = 18019        -- the friend toast sound kit (SOUNDKIT.UI_BNET_TOAST wins when it exists)
 local QUEUE_MAX = 40   -- more than all rows (the dev "show all" fits)
--- The plate on the alert art, in the art's texcoords (the background shows 0-0.605 x 0-0.703):
--- the inner rect inside the silver border, and the vertical centers of the title strip and the
--- dark band. Measured on the in-game art (2026-11-22).
-local BG_U, BG_V = 0.605, 0.703
-local PLATE = { l = 0.117, r = 0.583, t = 0.169, b = 0.531 }
-local TITLE_V, BAND_V = 0.232, 0.343
-local AF = "Interface\\AchievementFrame\\"
-local ART = {   -- the friend toast art (same as the game's BACKDROP_TOAST_12_12)
+
+-- The friend toast art (same as the game's BACKDROP_TOAST_12_12): the old-style windows use it.
+ns.TOAST_ART = {
 	bgFile = "Interface\\FriendsFrame\\UI-Toast-Background",
 	edgeFile = "Interface\\FriendsFrame\\UI-Toast-Border",
 	tile = true, tileEdge = true, tileSize = 12, edgeSize = 12,
 	insets = { left = 5, right = 5, top = 5, bottom = 5 },
 }
 
-ns.TOAST_ART = ART   -- the rewards grid uses the same art
-
-local f, cur, t0, lastSound
+local t, f, cur, t0, lastSound   -- t = the sw-toast refs, f = its root frame
 local queue = {}
+
+local function InCombat() return InCombatLockdown and InCombatLockdown() end
 
 local function Scale(frame, ui)
 	return (frame.GetEffectiveScale and frame:GetEffectiveScale() or ui) / ui
 end
 
--- Bottom-left spot in UIParent units: the game toast's spot (above it while it
+-- Bar off: bottom-left spot in UIParent units: the game toast's spot (above it while it
 -- is up), else above the chat, else a fixed spot.
 local function Spot()
 	local ui = UIParent.GetEffectiveScale and UIParent:GetEffectiveScale() or 1
@@ -68,17 +59,27 @@ local function Spot()
 	return 20, 240
 end
 
+-- The frame it sits on: the rewards popup when it is open over the bar, else the bar; nil = bar off.
+local function Owner()
+	local bar, rw = nil, nil
+	if ns.BarRefs then bar, rw = ns.BarRefs() end
+	if not (bar and bar.root:IsShown()) then return nil end
+	if rw and rw.root:IsShown() and rw.root:GetPoint(1) == "BOTTOMLEFT" then return rw.root end
+	return bar.root
+end
+
 local function Place(dy)
 	f:ClearAllPoints()
-	f:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", f.x, f.y - dy)
+	if f.owner then f:SetPoint("BOTTOMLEFT", f.owner, "TOPLEFT", 0, GAP - dy)
+	else f:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", f.x, f.y - dy) end
 end
 
 -- The game's toast sound: Sound On only, once per SOUND_GAP s. 1 = played.
 local function Sound()
 	if not (ns.SoundOn and ns.SoundOn()) or type(PlaySound) ~= "function" then return 0 end
-	local t = GetTime()
-	if lastSound and t - lastSound < SOUND_GAP then return 0 end
-	lastSound = t
+	local now = GetTime()
+	if lastSound and now - lastSound < SOUND_GAP then return 0 end
+	lastSound = now
 	local kit = type(SOUNDKIT) == "table" and tonumber(SOUNDKIT.UI_BNET_TOAST) or SOUND_ID
 	local ok, willPlay = pcall(PlaySound, kit, "SFX")
 	return (ok and willPlay ~= false) and 1 or 0
@@ -92,16 +93,17 @@ local function Next()
 		f:Hide()
 		return
 	end
-	f.icon:SetTexture(cur.icon)
-	ns.AchRingPaint(f.ring, cur.q, true)
-	f.name:SetText(cur.color .. cur.name .. "|r")
-	f.x, f.y = Spot()
+	t.icon:SetTexture(cur.icon)
+	Look.SetText(t.name, cur.color .. cur.name .. "|r")
+	Look.SetText(t.cmd, cur.cmd or "")
+	Look.SetText(t.rule, cur.rule or "")
+	Look.Refit(f)
+	f.owner = Owner()
+	if not f.owner then f.x, f.y = Spot() end
 	f.sliding = true
 	Place(SLIDE)
 	f:SetAlpha(0)
-	if f.glow.ok then f.glow:SetAlpha(0) f.glow:Show() end
-	if f.shine.ok then f.shine:SetAlpha(0) f.shine:Show() end
-	f:EnableMouse(not (InCombatLockdown and InCombatLockdown()))
+	f:EnableMouse(not InCombat())
 	t0 = GetTime()
 	f:Show()
 	if ns.Log then ns.Log(("TOAST id=%s sound=%d"):format(cur.id or "?", Sound())) end
@@ -120,69 +122,16 @@ local function Tick()
 		if f.sliding then f.sliding = false Place(0) end
 		f:SetAlpha(dt > SHOW and 1 - (dt - SHOW) / FADE or 1)
 	end
-	if f.glow.ok and f.glow:IsShown() then
-		if dt < GLOW_T then f.glow:SetAlpha(math.sin(math.pi * dt / GLOW_T)) else f.glow:Hide() end
-	end
-	if f.shine.ok and f.shine:IsShown() then
-		if dt < SHINE_T then
-			local p = dt / SHINE_T
-			f.shine:SetAlpha(math.sin(math.pi * p))
-			f.shine:ClearAllPoints()
-			f.shine:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", math.floor((W - SHINE_W) * p + 0.5), 8)
-		else
-			f.shine:Hide()
-		end
-	end
 end
-
--- One texture of the game's art. ok = false when this client has no such file.
-local function Art(layer, file, w, h, l, r, t, b, add)
-	local tex = f:CreateTexture(nil, layer)
-	tex.ok = tex:SetTexture(AF .. file) ~= false
-	if w then tex:SetSize(w, h) end
-	if l then tex:SetTexCoord(l, r, t, b) end
-	if add then tex:SetBlendMode("ADD") end
-	if not tex.ok then tex:Hide() end
-	return tex
-end
-
--- The plate's inner rect in toast units: left, top, width, height.
-local function Plate()
-	return PLATE.l / BG_U * W, PLATE.t / BG_V * H, (PLATE.r - PLATE.l) / BG_U * W, (PLATE.b - PLATE.t) / BG_V * H
-end
-local function R(v) return math.floor(v + 0.5) end
 
 local function Build()
-	f = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-	f:SetSize(W, H)
-	f:SetFrameStrata("DIALOG")
-	f:SetClampedToScreen(true)
-	f.bg = Art("BACKGROUND", "UI-Achievement-Alert-Background", nil, nil, 0, 0.605, 0, 0.703)
-	f.bg:SetAllPoints(f)
-	if not f.bg.ok and f.SetBackdrop then f:SetBackdrop(BACKDROP_TOAST_12_12 or ART) end
-	f.icon = f:CreateTexture(nil, "ARTWORK")
-	f.icon:SetSize(ICON, ICON)
-	f.icon:SetPoint("CENTER", f, "LEFT", 44, 2)
-	f.ring = f:CreateTexture(nil, "ARTWORK", nil, 1)   -- quality ring over the icon
-	f.ring:SetSize(ICON, ICON)
-	f.ring:SetPoint("CENTER", f, "LEFT", 44, 2)
-	f.iconFrame = Art("OVERLAY", "UI-Achievement-IconFrame", ICON_FRAME, ICON_FRAME, 0, 0.5625, 0, 0.5625)
-	f.iconFrame:SetPoint("CENTER", f, "LEFT", 43, 3)
-	f.glow = Art("OVERLAY", "UI-Achievement-Alert-Glow", W + 120, H + 95, 0, 0.78125, 0, 0.66796875, true)
-	f.glow:SetPoint("CENTER", f, "CENTER", 0, 0)
-	f.shine = Art("OVERLAY", "UI-Achievement-Alert-Glow", SHINE_W, SHINE_H, 0.78125, 0.912109375, 0, 0.28125, true)
-	f.shine:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 0, 8)
-	local pl, _, pw = Plate()
-	local cx = R(pl + pw / 2)   -- both strings: the plate's center, right of the icon
-	f.top = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	f.top:SetPoint("CENTER", f, "TOPLEFT", cx, -R(TITLE_V / BG_V * H))   -- in the strip under the top border
-	f.top:SetWidth(R(pw) - 8)
-	f.top:SetText("Achievement")
-	f.name = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-	f.name:SetPoint("CENTER", f, "TOPLEFT", cx, -R(BAND_V / BG_V * H))   -- on the dark band
-	f.name:SetWidth(R(pw) - 16)
-	f.name:SetWordWrap(false)
-	f:SetScript("OnMouseUp", function(_, button)
+	local L = Looks["sw-toast"]
+	t = L.build(UIParent, Look.D(L.tokens))
+	f = t.root
+	L.open(t)   -- the shell: TOOLTIP strata, clamped; placed per toast
+	f:Hide()
+	f:EnableMouse(false)
+	f:HookScript("OnMouseUp", function(_, button)
 		local id = cur and cur.id
 		Next()
 		if button == "LeftButton" and id and ns.AchShow then
@@ -190,26 +139,33 @@ local function Build()
 			if ns.Log then ns.Log(("TOAST click id=%s tab=%s glow=%d"):format(id, tostring(tab), glow and 1 or 0)) end
 		end
 	end)
-	f:SetScript("OnEnter", function() f.hover = true end)
-	f:SetScript("OnLeave", function() f.hover = false end)
+	f:HookScript("OnEnter", function() f.hover = true end)
+	f:HookScript("OnLeave", function() f.hover = false end)
 	f:SetScript("OnUpdate", Tick)
 	-- combat: no mouse at all, so it never takes a click meant for the game
 	f:SetScript("OnEvent", function(_, event) f:EnableMouse(event == "PLAYER_REGEN_ENABLED" and f:IsShown()) end)
 	f:RegisterEvent("PLAYER_REGEN_DISABLED")
 	f:RegisterEvent("PLAYER_REGEN_ENABLED")
-	f:Hide()
-	if ns.Log then
-		ns.Log(("TOAST art=%d icon=%d glow=%d"):format(f.bg.ok and 1 or 0, f.iconFrame.ok and 1 or 0, f.glow.ok and 1 or 0))
-	end
 end
 
--- Queues a toast for an achievement row. Returns true when it is queued.
+-- The reward command of an achievement row ("" = none).
+local function Cmd(id)
+	for _, r in ipairs(ns.REWARDS or {}) do if r.ach == id then return r.cmd end end
+	return ""
+end
+
+-- Queues a toast for an achievement row. Returns true when it is queued. No UI files = false (the chat line).
 function ns.Toast(row)
-	if not f then Build() end
+	if not f then
+		if not (Look and Looks and Looks["sw-toast"]) then return false end
+		Build()
+	end
 	if #queue >= QUEUE_MAX then return false end
-	queue[#queue + 1] = { id = row.id, icon = ns.AchIcon(row), name = row.name, color = ns.AchColor(row.q), q = row.q }
+	queue[#queue + 1] = { id = row.id, icon = ns.AchIcon(row), name = row.name, color = ns.AchColor(row.q), q = row.q,
+		cmd = Cmd(row.id), rule = row.rule }
 	if not cur then Next() end
 	return true
 end
 
 function ns.ToastFrame() return f end
+function ns.ToastRefs() return t end

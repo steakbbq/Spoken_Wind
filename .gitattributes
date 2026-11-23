@@ -4,3 +4,5 @@
 *.toc text eol=crlf
 *.tga binary
 *.webp binary
+*.ttf binary
+Spoken_Wind/Media/Fonts/*.txt -text

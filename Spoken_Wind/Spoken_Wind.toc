@@ -1,9 +1,27 @@
 ## Interface: 16001, 16002, 16003
 ## Title: Spoken Wind
 ## Notes: Fart sound on every /fart near you · /wind
-## Version: 0.7.1
+## Author: Hals Dunngold
+## Version: 0.8.4
 ## SavedVariables: SpokenWindDB
 
+UI\Look.lua
+UI\Parts.lua
+UI\sw-ach.lua
+UI\sw-ach-social.lua
+UI\sw-ach-classic.lua
+UI\sw-ach-collection.lua
+UI\sw-ach-board.lua
+UI\sw-btns.lua
+UI\sw-hello.lua
+UI\sw-tip.lua
+UI\sw-tip-btn.lua
+UI\sw-toast.lua
+UI\sw-rewards.lua
+UI\sw-options.lua
+UI\sw-fartlog.lua
+UI\sw-changelog.lua
+UI\sw-credits.lua
 Emotes.lua
 Lengths.lua
 Packs\human.lua
@@ -22,6 +40,7 @@ Pick.lua
 Changelog.lua
 FartLog.lua
 Achievements.lua
+AchWin.lua
 Toast.lua
 Rewards.lua
 Button.lua
@@ -32,5 +51,7 @@ Heard.lua
 Board.lua
 Collection.lua
 TestMode.lua
+Screens.lua
+Bar.lua
 Core.lua
 Options.lua

@@ -9,10 +9,9 @@
 --   0.6.4: H carries the replier's per-character numbers (Board.lua), like F.
 --   (CHAT_MSG_ADDON has no sender GUID, so the reply carries its own: People.)
 -- Count: unique repliers per fart (farter GUID + n) for WINDOW s; your own
---   reply never counts. Own fart: speaker icon + "Heard N" beside the Rewards
---   button for SHOW s (0 dimmed); someone else's: "<name> · Heard N" once N >= 1
---   (your own fart wins while it shows). The totals show under it, and on button
---   hover. Button off = no text (the totals still count). Own frame, no mouse.
+--   reply never counts. The bar's tag (Bar.lua) for SHOW s: own fart "Heard by N"
+--   (green from 1); someone else's: "<name> · Heard by N" once N >= 1 (your own fart
+--   wins while it shows). The totals: the bar tip. Bar off = no tag (the totals still count).
 -- Totals in SpokenWindDB.stats: own (own /fart presses), heard (replies to own
 --   farts), best (most in one own fart), people (GUIDs that ever replied),
 --   legend (own farts that rolled the legendary), legendHeard (others' legendary
@@ -25,13 +24,11 @@ local SHOW = 5        -- s the "Heard N" line stays
 local GAP = 1         -- s between two own replies
 local KEEP = 64       -- farts tracked, replies remembered
 local NMAX = 999      -- F message numbers 1..NMAX
-local LINE = 14       -- px per text line
 local ICON = "Interface\\Common\\VoiceChat-Speaker"
-local DIM = "|cff808080"
 local CHANNELS = { PARTY = true, RAID = true, INSTANCE_CHAT = true, GUILD = true, SAY = true }
 ns.HEARD = { window = WINDOW, show = SHOW, gap = GAP, keep = KEEP, icon = ICON }
 
-local db, lastReply, panel, cur, hover
+local db, lastReply, cur
 local order, farts = {}, {}       -- tracked farts (oldest first); "guid:n" -> fart
 local replied, rorder = {}, {}    -- "guid:n" -> GetTime() of our reply
 
@@ -115,70 +112,27 @@ function ns.HeardBoot()
 		Count(s.people), s.best, s.legend, s.legendHeard)
 end
 
--- Rewards grid head, after "Rewards N/15".
-function ns.HeardHead()
+-- The bar tip: the totals.
+function ns.HeardTipRows()
 	local s = db.stats
-	return (" · Farts %d\nHeard %d · People %d · Best %d\nLegend %d · Heard %d"):format(s.own, s.heard,
-		Count(s.people), s.best, s.legend, s.legendHeard)
+	return { { "Farts", tostring(s.own) }, { "Heard", tostring(s.heard) }, { "People", tostring(Count(s.people)) },
+		{ "Best", tostring(s.best) }, { "Legend", tostring(s.legend) }, { "Legend heard", tostring(s.legendHeard) } }
 end
 
--- ------------------------------------------------------------ show (beside the Rewards button)
-local function Build()
-	panel = CreateFrame("Frame", nil, UIParent)
-	panel:SetSize(170, 4 * LINE)
-	panel:SetFrameStrata("MEDIUM")
-	panel.lines = {}
-	for i = 1, 4 do panel.lines[i] = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall") end
-	panel:Hide()
-end
-
--- The side away from the screen edge: button on the left half = text on its right.
-local function Place(btn)
-	local l = btn:GetLeft()
-	local uw = UIParent.GetWidth and UIParent:GetWidth()
-	local right = not (l and uw and uw > 0 and l + 16 > uw / 2)
-	panel:ClearAllPoints()
-	if right then panel:SetPoint("LEFT", btn, "RIGHT", 6, 0) else panel:SetPoint("RIGHT", btn, "LEFT", -6, 0) end
-	local a = right and "TOPLEFT" or "TOPRIGHT"
-	for i, fs in ipairs(panel.lines) do
-		fs:ClearAllPoints()
-		fs:SetPoint(a, panel, a, 0, -(i - 1) * LINE)
-		fs:SetJustifyH(right and "LEFT" or "RIGHT")
-	end
-	panel.right = right
-end
-
-local function FartLine(f)
-	local txt = f.own and ("Heard %d"):format(f.count) or ("%s · Heard %d"):format(f.who, f.count)
-	if f.count == 0 then txt = DIM .. txt .. "|r" end
-	return "|T" .. ICON .. ":14|t " .. txt
+-- ------------------------------------------------------------ show (the bar's tag)
+-- The tag text and count of the fart shown now; nil = none.
+function ns.HeardTag()
+	if not cur then return nil end
+	local txt = cur.own and ("Heard by %d"):format(cur.count) or ("%s · Heard by %d"):format(cur.who, cur.count)
+	return txt, cur.count
 end
 
 local function Draw()
-	local btn = ns.RewardFrames and ns.RewardFrames()
-	if not (btn and btn:IsShown() and (cur or hover)) then
-		if panel then panel:Hide() end
-		return
-	end
-	if not panel then Build() end
-	Place(btn)
-	local s, list = db.stats, {}
-	if cur then list[1] = FartLine(cur) end
-	list[#list + 1] = ("Farts %d"):format(s.own)
-	list[#list + 1] = ("Heard %d · People %d"):format(s.heard, Count(s.people))
-	list[#list + 1] = ("Legend %d · Heard %d"):format(s.legend, s.legendHeard)
-	for i, fs in ipairs(panel.lines) do fs:SetText(list[i] or "") end
-	panel:Show()
+	if ns.BarDraw then ns.BarDraw() end
 end
 ns.HeardDraw = Draw
 
--- Rewards button hover (and its Options checkbox): the totals.
-function ns.HeardHover(on)
-	hover = on == true
-	Draw()
-end
-
--- Own fart: at once (0 dimmed). Someone else's: from its first reply (HeardGot).
+-- Own fart: at once (0 = base color). Someone else's: from its first reply (HeardGot).
 local function Show(f)
 	local now = GetTime()
 	if cur ~= f then
