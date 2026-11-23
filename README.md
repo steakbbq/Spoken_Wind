@@ -10,7 +10,8 @@ Today, every player is finally heard.
 **Someone types /fart near you. You hear it.**
 
 - Every player gets a voice: their own race and body. 9 races x 2 bodies x 74 sounds, + 5 Artifact sounds = 1337.
-- 14 original fart sounds, made from scratch (no samples), for players with no race data
+- 14 original fart sounds, made from scratch (no samples): a rare Classic tier in every voice (1 in 200),
+  and the sounds for players with no race data
 - Rarity: Poor to Legendary (1 in 500), Artifact (1 in 5000)
 - Same fart for everyone: every Spoken Wind user near you hears the same sound, nearly always (also when the
   farter has no addon)
