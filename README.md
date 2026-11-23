@@ -14,7 +14,7 @@ When someone near you types /fart, you hear it. Everyone nearby with the addon h
 
 ### 1337 farts
 
-Every race has its own farts, with a separate set for each body type. That's 74 per voice across 18 voices, plus 5 Artifact farts on top. They have rarities like loot, from Poor up to Legendary (1 in 500), and Artifact is 1 in 5000.
+Every race has its own farts, with a separate set for each body type. That's 74 per voice across 18 voices, plus 5 Shartifact farts on top. They have rarities like loot, from Poor up to Legendary (1 in 500), and Shartifact is 1 in 5000.
 
 ### Achievements
 
@@ -41,11 +41,11 @@ This is on by default. Your character farts on their own about once an hour, and
 
 Spoken Wind talks to other copies of itself with hidden addon messages (prefix `SpWind`), which never show up in chat. They go to your party or raid, your guild, and /say when you're in an instance. There's one message when you fart, so everyone hears the same sound, and one "heard it" reply when you hear a fart that came with a message. That's how the "heard by" counts work. The Board gets its numbers the same way, but only from party and guild, when you fart and every 5 to 6 minutes, and never in combat. If you don't want to be on other people's Boards, type `/wind board off`.
 
-The pair test (`/wind pair`) only whispers the one player you picked.
+The pair test (`/wind pair`) only talks to the one player you picked. It whispers them, or uses your party or raid channel if you're in a group with them.
 
-If you use the Fart button on a player, it first checks in the background if they have the addon. If they don't, a whisper icon shows up, and if you click that it sends them one whisper about Spoken Wind. Nothing gets whispered unless you click it.
+If you use the Fart button on a player, it first checks in the background if they have the addon. If they don't, a whisper icon shows up, and if you click that it sends them one whisper about Spoken Wind. Nothing gets whispered unless you click it. If you right-click the Fart button, it says the same thing once in /say, for when there's a bunch of people around. You can do that once every 5 minutes.
 
-The only things that show up in chat are the reward emotes, that whisper, random farts and fart attacks, and one very rare surprise. There's no account ID in any of it, and nothing that links your characters together.
+The only things that show up in chat are the reward emotes, that whisper or /say line, random farts and fart attacks, and one very rare surprise. There's no account ID in any of it, and nothing that links your characters together.
 
 ## Commands
 
@@ -63,7 +63,7 @@ The only things that show up in chat are the reward emotes, that whisper, random
 | `/wind pair [name]` / `pair off` | test with a friend that you both hear the same farts |
 | `/wind reset` | reset everything to default |
 
-`/spokenwind` works too. All the same settings, the fart log and the changelog are in Options > AddOns > Spoken Wind.
+`/spokenwind` works too. All the same settings, the fart log, the changelog and the credits are in Options > AddOns > Spoken Wind.
 
 It's made for the English client. Other languages should mostly work, but if it's silent for you, open an issue or a PR.
 
@@ -90,6 +90,15 @@ Releases go through GitHub Actions. Pushing a tag like `v0.7.1` runs the tests, 
 
 If something breaks, the log is in `SpokenWindDB.log` in your SavedVariables (BOOT, PLAY, SKIP, ACH, REWARD, DEX, ERR and SUM lines), and the sync lines are in `SpokenWindDB.sync`. Pasting those into an issue helps me a lot.
 
+## Credits
+
+Spoken Wind is made by Hals Dunngold (that's me).
+
+Big thanks to my testers, who try every new version before it comes out:
+
+- Bumm Farto
+- Chrissy Walnutz
+
 ## License
 
-MIT. See `LICENSE`.
+MIT. See `LICENSE`. The fonts in `Spoken_Wind/Media/Fonts` (Lato, Barlow and DejaVu Sans) aren't covered by that. They keep their own licenses, which are in the same folder.
