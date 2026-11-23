@@ -456,7 +456,7 @@ ok("toc order", table.concat(files, ",") ==
 		.. "Match.lua,Pick.lua,Changelog.lua,FartLog.lua,Achievements.lua,Toast.lua,Rewards.lua,Button.lua,Random.lua,Shart.lua,Sync.lua,Heard.lua,Board.lua,Collection.lua,TestMode.lua,Core.lua,Options.lua",
 	table.concat(files, ","))
 ok("toc title", toc:find("## Title: Spoken Wind\r?\n") ~= nil)
-ok("toc version 0.7.0", toc:find("## Version: 0.7.0\r?\n") ~= nil)
+ok("toc version 0.7.1", toc:find("## Version: 0.7.1\r?\n") ~= nil)
 ok("toc no X- keys", not toc:find("##%s*[Xx]%-"))
 local ALLOWED = { Interface = 1, Title = 1, Notes = 1, Version = 1, SavedVariables = 1 }
 local keys = 0
@@ -480,7 +480,7 @@ ok("defaults", SpokenWindDB.on == true and SpokenWindDB.ch == "SFX" and SpokenWi
 ok("new install: cd 1, move flag set, no move line", SpokenWindDB.cdMove == true and not LogHas("CD move"))
 ok("slash", SLASH_SPOKENWIND1 == "/wind" and SLASH_SPOKENWIND2 == "/spokenwind"
 	and type(SlashCmdList.SPOKENWIND) == "function")
-ok("boot line", LogHas("BOOT v=0.7.0 loc=enUS emotes=FART:checked:/fart slash=/wind clash=0 panel=vertical log=page flog=page farts=0 ach=button done=0 rw=15 btn=1 sync=1/2 wait=150 tm=1 on=1 ch=SFX self=1 cd=1 n=1351 len=1351/1351 dex=0 own=0 heard=0 people=0 best=0 legend=0 legendHeard=0 reply=1 char=0/0/0 all=0/0/1 tiers=0.0.0.0.0.0.0 alltiers=0.0.0.0.0.0.0 board=0 hide=0 seen=? win=0 rnd=1 tgt=0 aur=0 rev=12 dev=0 set=1337 vms=0 vox=- vbad=0 art=5 apk=0"),
+ok("boot line", LogHas("BOOT v=0.7.1 loc=enUS emotes=FART:checked:/fart slash=/wind clash=0 panel=vertical log=page flog=page farts=0 ach=button done=0 rw=15 btn=1 sync=1/2 wait=150 tm=1 on=1 ch=SFX self=1 cd=1 n=1351 len=1351/1351 dex=0 own=0 heard=0 people=0 best=0 legend=0 legendHeard=0 reply=1 char=0/0/0 all=0/0/1 tiers=0.0.0.0.0.0.0 alltiers=0.0.0.0.0.0.0 board=0 hide=0 seen=? win=0 rnd=1 tgt=0 aur=0 rev=12 dev=0 set=1337 vms=0 vox=- vbad=0 art=5 apk=0"),
 	LastLog())
 ok("no prints at load", #prints == 0, prints[1])
 ok("public: no dev flag", SPOKEN_WIND_DEV == nil)
@@ -574,23 +574,24 @@ for i, row in ipairs(CL) do
 		ok("changelog terse: " .. t, #t <= 34 and not t:find("[%.!?]$") and not t:find("%. "), t)
 	end
 end
-ok("changelog 0.7.0", CL[1].v == "0.7.0" and table.concat(CL[1], ",") == "Race voices: 74 per race and body,Collection pages per voice", table.concat(CL[1], ","))
-ok("changelog 0.6.6", CL[2].v == "0.6.6" and table.concat(CL[2], ",") == "Random farts: 1 per hour,Wake-up fart,/wind random off", table.concat(CL[2], ","))
-ok("changelog 0.6.5", CL[3].v == "0.6.5" and table.concat(CL[3], ",") == "Fart button", table.concat(CL[3], ","))
-ok("changelog 0.6.4", CL[4].v == "0.6.4" and table.concat(CL[4], ",") == "Board tab,All players,Rarity rows,/wind board off", table.concat(CL[4], ","))
-ok("changelog 0.6.3", CL[5].v == "0.6.3" and table.concat(CL[5], ",") == "Collection tab,5 new achievements,Click a sound = play,One sound per person")
-ok("changelog 0.6.2.1", CL[6] and CL[6].v == "0.6.2.1" and table.concat(CL[6], ",") == "Toast text centered,Toast click = window,Earned first by rarity",
-	table.concat(CL[5], ","))
-ok("changelog 0.6.2", CL[7] and CL[7].v == "0.6.2" and table.concat(CL[7], ",") == "Heard count,Farts · Heard · People,Achievements window,17 Social achievements")
-ok("changelog 0.6.1", CL[8] and CL[8].v == "0.6.1" and table.concat(CL[8], ",") == "Pair test: /wind pair,Bigger toast + sound")
-ok("changelog 0.6.0", CL[9] and CL[9].v == "0.6.0" and table.concat(CL[9], ",") == "Same fart for all,Sync wait 0-300ms")
-ok("changelog 0.5.0", CL[10] and CL[10].v == "0.5.0" and table.concat(CL[10], ",") == "15 reward emotes,Rewards button")
-ok("changelog 0.4.1", CL[11] and CL[11].v == "0.4.1" and table.concat(CL[11], ",") == "Bigger icons,Clearer Machine Gun,Cooldown 1s,Dev: 1 secret")
-ok("changelog 0.4.0", CL[12] and CL[12].v == "0.4.0" and table.concat(CL[12], ",") == "15 achievements,Toasts,Icons by the author")
-ok("changelog 0.3.0", CL[13] and CL[13].v == "0.3.0" and table.concat(CL[13], ",") == "Fart log")
-ok("changelog 0.2.1", CL[14] and CL[14].v == "0.2.1" and table.concat(CL[14], ",") == "Test: dev only")
-ok("changelog 0.2.0", CL[15] and CL[15].v == "0.2.0" and table.concat(CL[15], ",") == "Cooldown per person,Options page,Changelog")
-ok("changelog 0.1.0", CL[16] and CL[16].v == "0.1.0" and table.concat(CL[16], ",") == "First release,14 toots,/wind commands")
+ok("changelog 0.7.1", CL[1].v == "0.7.1" and table.concat(CL[1], ",") == "Originals: Classic tier, 1 in 200,Fix: error spam on hidden auras", table.concat(CL[1], ","))
+ok("changelog 0.7.0", CL[2].v == "0.7.0" and table.concat(CL[2], ",") == "Race voices: 74 per race and body,Collection pages per voice", table.concat(CL[2], ","))
+ok("changelog 0.6.6", CL[3].v == "0.6.6" and table.concat(CL[3], ",") == "Random farts: 1 per hour,Wake-up fart,/wind random off", table.concat(CL[3], ","))
+ok("changelog 0.6.5", CL[4].v == "0.6.5" and table.concat(CL[4], ",") == "Fart button", table.concat(CL[4], ","))
+ok("changelog 0.6.4", CL[5].v == "0.6.4" and table.concat(CL[5], ",") == "Board tab,All players,Rarity rows,/wind board off", table.concat(CL[5], ","))
+ok("changelog 0.6.3", CL[6].v == "0.6.3" and table.concat(CL[6], ",") == "Collection tab,5 new achievements,Click a sound = play,One sound per person")
+ok("changelog 0.6.2.1", CL[7] and CL[7].v == "0.6.2.1" and table.concat(CL[7], ",") == "Toast text centered,Toast click = window,Earned first by rarity",
+	table.concat(CL[6], ","))
+ok("changelog 0.6.2", CL[8] and CL[8].v == "0.6.2" and table.concat(CL[8], ",") == "Heard count,Farts · Heard · People,Achievements window,17 Social achievements")
+ok("changelog 0.6.1", CL[9] and CL[9].v == "0.6.1" and table.concat(CL[9], ",") == "Pair test: /wind pair,Bigger toast + sound")
+ok("changelog 0.6.0", CL[10] and CL[10].v == "0.6.0" and table.concat(CL[10], ",") == "Same fart for all,Sync wait 0-300ms")
+ok("changelog 0.5.0", CL[11] and CL[11].v == "0.5.0" and table.concat(CL[11], ",") == "15 reward emotes,Rewards button")
+ok("changelog 0.4.1", CL[12] and CL[12].v == "0.4.1" and table.concat(CL[12], ",") == "Bigger icons,Clearer Machine Gun,Cooldown 1s,Dev: 1 secret")
+ok("changelog 0.4.0", CL[13] and CL[13].v == "0.4.0" and table.concat(CL[13], ",") == "15 achievements,Toasts,Icons by the author")
+ok("changelog 0.3.0", CL[14] and CL[14].v == "0.3.0" and table.concat(CL[14], ",") == "Fart log")
+ok("changelog 0.2.1", CL[15] and CL[15].v == "0.2.1" and table.concat(CL[15], ",") == "Test: dev only")
+ok("changelog 0.2.0", CL[16] and CL[16].v == "0.2.0" and table.concat(CL[16], ",") == "Cooldown per person,Options page,Changelog")
+ok("changelog 0.1.0", CL[17] and CL[17].v == "0.1.0" and table.concat(CL[17], ",") == "First release,14 toots,/wind commands")
 local sub = reg.subs[2]
 ok("changelog sub-page last", #reg.subs == 2 and sub.parent == reg.cat and sub.name == "Changelog")
 local texts, lowest = {}, 0
@@ -599,7 +600,7 @@ for _, fs in ipairs(sub and sub.frame.strings or {}) do
 	if fs.y then lowest = math.min(lowest, fs.y) end
 end
 ok("changelog page text", table.concat(texts, "|") ==
-	"Changelog|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|0.6.2.1|· Toast text centered|· Toast click = window|· Earned first by rarity|+10 older",
+	"Changelog|0.7.1|· Originals: Classic tier, 1 in 200|· Fix: error spam on hidden auras|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|+11 older",
 	table.concat(texts, "|"))
 ok("changelog version gold, lines white", sub and sub.frame.strings[2].font == "GameFontNormal"
 	and sub.frame.strings[3].font == "GameFontHighlight")
@@ -1015,10 +1016,10 @@ ok("nosub: panel=vertical log=section", LastLog():find("panel=vertical log=secti
 local heads = {}
 for _, i in ipairs(reg.layout.inits) do if i.header then heads[#heads + 1] = i.header end end
 ok("nosub: changelog rows", table.concat(heads, "|") ==
-	"Changelog|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|0.6.2.1|· Toast text centered|· Toast click = window|· Earned first by rarity|+10 older",
+	"Changelog|0.7.1|· Originals: Classic tier, 1 in 200|· Fix: error spam on hidden auras|0.7.0|· Race voices: 74 per race and body|· Collection pages per voice|0.6.6|· Random farts: 1 per hour|· Wake-up fart|· /wind random off|0.6.5|· Fart button|0.6.4|· Board tab|· All players|· Rarity rows|· /wind board off|0.6.3|· Collection tab|· 5 new achievements|· Click a sound = play|· One sound per person|+11 older",
 	table.concat(heads, "|"))
 ok("nosub: changelog rows + the Achievements button (public)", #reg.buttons == 1 and reg.buttons[1].name == "Achievements"
-	and #reg.layout.inits == 26, #reg.layout.inits)
+	and #reg.layout.inits == 25, #reg.layout.inits)
 ok("nosub: no fart log page", #reg.subs == 0 and LastLog():find(" flog=none ", 1, true), LastLog())
 ok("nosub: Achievements button", LastLog():find(" ach=button done=", 1, true), LastLog())
 ok("nosub: settings still work", ns.panelSettings and ns.panelSettings.cd ~= nil)
@@ -2812,7 +2813,7 @@ now = now + 5
 Press(A, "FART")
 ok("sync: no send API: no error", not LogHas("ERR"))
 A.ev.scripts.OnEvent(A.ev, "PLAYER_LOGOUT")
-ok("sync: SUM at logout", SLast(A):find(" SYNC SUM msg=0 seed=2 late=0 own=3 rand=0 waited=0 sent=14 bad=9 xf=0 sTimer=0 sCapped=0 btn=0.0.0.0 rfart=0$"), SLast(A))
+ok("sync: SUM at logout", SLast(A):find(" SYNC SUM msg=0 seed=2 late=0 own=3 rand=0 waited=0 sent=14 bad=9 xf=0 sTimer=0 sCapped=0 btn=0.0.0.0 rfart=0 rsec=0 classic=0$"), SLast(A))
 for i = 1, 350 do A.ns.SyncLog("x" .. i) end
 ok("sync: ring keeps 300", #A.db.sync == 300 and A.db.sync[300]:find(" x350$"), #A.db.sync)
 
@@ -4809,7 +4810,7 @@ local wa = Win(A)
 ok("test: window at the top, 300 wide", wa.shown and wa.point[1] == "TOP" and wa.point[3] == "TOP" and wa.point[5] == -150
 	and wa.w == 300 and wa.strata == "DIALOG")
 ok("test: window: wait + how to pair", Text(A) == "Wind test · Bo · wait|seed ? · clock ?|partner: /wind pair Ann", Text(A))
-ok("test: HI by whisper", #Sent(A, "T:1:HI:Player-1-0000A001:0.7.0:Alliance:", "WHISPER") == 1)
+ok("test: HI by whisper", #Sent(A, "T:1:HI:Player-1-0000A001:0.7.1:Alliance:", "WHISPER") == 1)
 Tick(1.5)
 ok("test: clock tick found", TN(A, "CLOCK tick ok") == 1 and not St(B).on and #St(B).lines == 0)
 B.target = A
@@ -4821,7 +4822,7 @@ Tick(4)
 ok("test: paired both ways", TA.paired and TB.paired and TA.partner == "Bo-Nowhere" and TB.partner == "Ann-Nowhere"
 	and TA.side == 1 and TB.side == 2 and TA.id == TB.id, tostring(TA.side) .. tostring(TB.side))
 ok("test: seed match", TA.seed == "match" and TB.seed == "match"
-	and TN(A, "PAIR ok side=1 seed=match ver=0.7.0 pver=0.7.0 pg=" .. GB) == 1 and TN(B, "PAIR ok side=2 seed=match") == 1)
+	and TN(A, "PAIR ok side=1 seed=match ver=0.7.1 pver=0.7.1 pg=" .. GB) == 1 and TN(B, "PAIR ok side=2 seed=match") == 1)
 local _, SA = St(A)
 ok("test: clock: no tick on B yet = retry", SA.retry == 1, SA.retry)
 ok("test: clock: 3 pings each", TN(A, "CLOCK ping=") == 3 and TN(B, "CLOCK ping=") == 3, TN(A, "CLOCK ping="))
@@ -5590,7 +5591,7 @@ local total = 0
 for _, x in ipairs(SY.asent) do if x.tick and x.m:sub(1, 4) == "S:1:" then total = total + 1 end end
 ok("timer: log cap 30 lines", total > 30 and SN("S timer ch=") <= 30 and SN("S timer ch=") >= 29, SN("S timer ch="))
 ev.scripts.OnEvent(ev, "PLAYER_LOGOUT")
-ok("timer: SUM sTimer at logout", SFind(" SYNC SUM "):find(" sTimer=" .. total .. " sCapped=0 btn=0.0.0.0 rfart=0$"), SFind(" SYNC SUM "))
+ok("timer: SUM sTimer at logout", SFind(" SYNC SUM "):find(" sTimer=" .. total .. " sCapped=0 btn=0.0.0.0 rfart=0 rsec=0 classic=0$"), SFind(" SYNC SUM "))
 ok("timer: no ERR but the board test", SN("ERR") == 1)
 -- /reload: the wait survives (db.sLast); a clock that went back waits from now
 local saved = SpokenWindDB
@@ -5913,7 +5914,7 @@ for _ = 1, 50 do Press() end
 ok("fbtn: max 20 BTN log lines per session", BN("BTN ") == 20, BN("BTN "))
 ok("fbtn: session sums count past the cap", ns.BtnSums() == "57.6.6.0", ns.BtnSums())
 ns.SyncSum()
-ok("fbtn: SUM line btn=", (SpokenWindDB.sync[#SpokenWindDB.sync] or ""):find(" btn=57.6.6.0 rfart=0$") ~= nil, SpokenWindDB.sync[#SpokenWindDB.sync])
+ok("fbtn: SUM line btn=", (SpokenWindDB.sync[#SpokenWindDB.sync] or ""):find(" btn=57.6.6.0 rfart=0 rsec=0 classic=0$") ~= nil, SpokenWindDB.sync[#SpokenWindDB.sync])
 NoNames("cap")
 
 -- the answer (pong): a WHISPER P:1 = ONE Q:1; 1 per sender per 30 s; 10 per minute; whisper only
@@ -6252,7 +6253,7 @@ local say = prints[#prints]
 ok("rand: status = on + minutes left (45-75)", say:find("random on · %d+ min") ~= nil
 	and tonumber(say:match("(%d+) min")) >= 45 and tonumber(say:match("(%d+) min")) <= 75, say)
 ev.scripts.OnEvent(ev, "PLAYER_LOGOUT")
-ok("rand: SUM rfart=2", RLast(" SYNC SUM "):find(" rfart=2$") ~= nil, RLast(" SYNC SUM "))
+ok("rand: SUM rfart=2", RLast(" SYNC SUM "):find(" rfart=2 rsec=0 classic=0$") ~= nil, RLast(" SYNC SUM "))
 
 -- a manual /fart before the due time: a new wait from the press
 Boot()
@@ -7072,7 +7073,7 @@ do   -- the aura probe (log only): bag, campfire and rest auras, spell ID + name
 	-- cap 30 per session (own cap: the RAND lines still log)
 	for i = 1, 40 do AuraEv("player", { addedAuras = { { spellId = 9000 + i, name = "rest", auraInstanceID = 400 + i } } }) end
 	AuraEv("player", { removedAuraInstanceIDs = { 401, 402 } })
-	ok("rand probe: max 30 lines per session", RN("RAND aura ") == 30, RN("RAND aura "))
+	ok("rand probe: max 30 lines per session", RN("RAND aura +") + RN("RAND aura -") == 30, RN("RAND aura "))
 	Slash("random off")
 	ok("rand probe: its own cap (RAND lines still log)", RN("RAND skip why=off") == 1)
 	-- random off: the probe still logs
@@ -7163,6 +7164,47 @@ do   -- edges: login in the bag, old timers, steps read the auras, after the sig
 	RunT(60)
 	ok("rand: a secret aura answer when out of the bag = still out", RN("RAND wake due") == 0 and Farts() == 0)
 end
+
+do   -- 0.7.1: hidden (secret) aura lists in UNIT_AURA (client 1.60.1: 157 x "ERR rand Random.lua:283 / :302 ...
+	-- bad argument #1 to 'ipairs' (table expected, got secret)"). Fake secrets: type() = "table", ipairs refuses them.
+	local SA, SR, SI = { "x" }, { 1 }, { addedAuras = {} }
+	local SE = setmetatable({}, { __index = function() error("attempt to index a secret value") end })
+	local realIpairs = ipairs
+	ipairs = function(t, ...)
+		if issecretvalue and issecretvalue(t) then error("bad argument #1 to 'ipairs' (table expected, got secret)") end
+		return realIpairs(t, ...)
+	end
+	local function MainN(s)
+		local k = 0
+		for _, l in realIpairs(SpokenWindDB.log) do if l:find(s, 1, true) then k = k + 1 end end
+		return k
+	end
+	Boot()
+	RunT(60)
+	st.rig = { ["1-100"] = 100, ["5-50"] = 10 }
+	Bag(true)
+	st.aura[BAG] = nil   -- out of the bag now, but the event data is hidden
+	issecretvalue = function(v) return v == SA or v == SR or v == SI or v == SE end
+	ev.scripts.OnEvent(ev, "UNIT_AURA", "player", { addedAuras = SA })              -- 0.7.0: Random.lua:283
+	ev.scripts.OnEvent(ev, "UNIT_AURA", "player", { removedAuraInstanceIDs = SR })  -- 0.7.0: Random.lua:302
+	for _ = 1, 20 do ev.scripts.OnEvent(ev, "UNIT_AURA", "player", { addedAuras = SA, removedAuraInstanceIDs = SR }) end
+	ev.scripts.OnEvent(ev, "UNIT_AURA", "player", SI)                               -- the whole info hidden
+	ok("rand 0.7.1: secret aura lists (added, removed, both, all) = no ERR, one RAND aura secret line",
+		MainN("ERR") == 0 and RN("ERR") == 0 and RN("RAND aura secret") == 1, MainN("ERR") .. " " .. RN("RAND aura secret"))
+	ok("rand 0.7.1: a hidden aura event = no aura check (state unknown: no wake-up, no fart)",
+		RN("RAND wake due") == 0 and Farts() == 0, RLast("RAND wake"))
+	ev.scripts.OnEvent(ev, "UNIT_AURA", "player", { addedAuras = { SE, { spellId = CAMP, name = "Camp", auraInstanceID = 3 } } })
+	ok("rand 0.7.1: a secret entry in a shown list = skipped, the rest read, no error", MainN("ERR") == 0
+		and RN("RAND aura +1229739 Camp") == 1, MainN("ERR"))
+	issecretvalue = nil
+	RunT(15)   -- the tick: the aura answer is shown again
+	ok("rand 0.7.1: the next shown answer = the wake-up as before", RN("RAND wake due=10") == 1, RLast("RAND wake"))
+	ev.scripts.OnEvent(ev, "PLAYER_LOGOUT")
+	ok("rand 0.7.1: SYNC SUM rsec = the hidden events (23); SUM err=0", RLast(" SYNC SUM "):find(" rsec=23 ", 1, true) ~= nil
+		and MainN(" SUM ") == 1 and MainN(" err=0 ") == 1, RLast(" SYNC SUM "))
+	ipairs = realIpairs
+end
+
 
 do   -- the RAND lines of a wake-up + an attack with a target named Bob: no names, no GUIDs
 	Attack(nil, function() st.tgt = "Bob" end)
@@ -7404,25 +7446,49 @@ GetPlayerInfoByGUID = nil
 -- the tier pick: whole numbers, the page odds
 local VH = VOX.voices.Human_m
 ok("pick: same hash = same sound (every client)", ns.VoicePick(VH, 123456789) == ns.VoicePick(VH, 123456789))
-local N, art, leg, tierN, seen, nSeen = 200000, 0, 0, { 0, 0, 0, 0, 0 }, {}, 0
+local N, art, leg, cls, tierN, seen, nSeen = 200000, 0, 0, 0, { 0, 0, 0, 0, 0 }, {}, 0
 for h = 0, N - 1 do
 	local i = ns.VoicePick(VH, h)
 	local s = snd[i]
-	if s.tier == 7 then art = art + 1 elseif s.tier == 6 then leg = leg + 1 else tierN[s.tier] = tierN[s.tier] + 1 end
+	if i <= 14 then cls = cls + 1
+	elseif s.tier == 7 then art = art + 1 elseif s.tier == 6 then leg = leg + 1 else tierN[s.tier] = tierN[s.tier] + 1 end
 	if not seen[i] then seen[i], nSeen = true, nSeen + 1 end
 end
-ok("pick: Artifact exactly 1 in 5000, the legend 1 in 500", art == 40 and leg == 400, art .. " " .. leg)
-local rest, far = N - art - leg, nil
+ok("pick: Artifact exactly 1 in 5000, the legend 1 in 500, Classic 1 in 200", art == 40 and leg == 400 and cls == 1000,
+	art .. " " .. leg .. " " .. cls)
+local rest, far = N - art - leg - cls, nil
 for t, w in ipairs({ 25, 35, 22, 13, 5 }) do
 	local pct = tierN[t] / rest * 100
 	if math.abs(pct - w) > 0.5 then far = ("tier %d: %.2f%%"):format(t, pct) end
 end
 ok("pick: the tiers by weight (poor 25, common 35, uncommon 22, rare 13, epic 5)", far == nil, far)
-ok("pick: every sound of the voice + the 5 Artifacts can come", nSeen == 74 + 5, nSeen)
+ok("pick: every sound of the voice + the 5 Artifacts + the 14 Classic can come", nSeen == 74 + 5 + 14, nSeen)
 local L1 = VH.tiers[6][1]
-ok("pick: hash % 100000: 0-19 Artifact, 20-219 the legend, 220+ a tier", snd[ns.VoicePick(VH, 0)].tier == 7
+local t720 = snd[ns.VoicePick(VH, 720)].tier
+ok("pick: hash % 100000: 0-19 Artifact, 20-219 the legend, 220-719 Classic, 720+ a tier", snd[ns.VoicePick(VH, 0)].tier == 7
 	and snd[ns.VoicePick(VH, 19)].tier == 7 and snd[ns.VoicePick(VH, 100019)].tier == 7 and ns.VoicePick(VH, 20) == L1
-	and ns.VoicePick(VH, 219) == L1 and snd[ns.VoicePick(VH, 220)].tier <= 5)
+	and ns.VoicePick(VH, 219) == L1 and ns.VoicePick(VH, 220) <= 14 and ns.VoicePick(VH, 719) <= 14
+	and ns.VoicePick(VH, 100220) <= 14 and t720 ~= nil and t720 <= 5, t720)
+do   -- Classic: each of the old 14 the same odds (as in 0.6.x: 1 in 14), never the one before it
+	local cN, cBad, cFar, cSame = {}, nil, nil, nil
+	for k = 0, 39 do
+		for u = 220, 719 do
+			local i = ns.VoicePick(VH, k * 100000 + u)
+			if i > 14 then cBad = k * 100000 + u end
+			cN[i] = (cN[i] or 0) + 1
+		end
+	end
+	for i = 1, 14 do
+		if not cN[i] or math.abs(cN[i] - 20000 / 14) > 20000 / 14 * 0.1 then cFar = i .. ": " .. tostring(cN[i]) end
+	end
+	ok("pick: Classic = the old 14, each about 1 in 14 (the 0.6.x odds)", cBad == nil and cFar == nil, cBad or cFar)
+	for u = 220, 719 do
+		local a = ns.VoicePick(VH, u)
+		local b = ns.VoicePick(VH, u, a)
+		if b == a or b > 14 then cSame = u end
+	end
+	ok("pick: Classic twice in a step = another of the 14, never the one before it", cSame == nil, cSame)
+end
 ok("pick: the legend twice in a step = a normal tier", snd[ns.VoicePick(VH, 20, L1)].tier <= 5)
 local a0 = ns.VoicePick(VH, 0)
 local a1 = ns.VoicePick(VH, 0, a0)
@@ -7435,7 +7501,7 @@ end
 ok("pick: never the sound before it", same == nil, same)
 local FV = { tiers = { [1] = { 15 }, [2] = { 16, 17 }, [5] = { 18 } }, w = 25 + 35 + 5 }
 local hT1, hT5
-for h = 300, 100000 do   -- hash % 100000 >= 220: no Artifact, no legend
+for h = 720, 100000 do   -- hash % 100000 >= 720: no Artifact, no legend, no Classic
 	local x = (h * 48271 % 2147483647) % 65
 	if not hT1 and x < 25 then hT1 = h end
 	if not hT5 and x >= 60 then hT5 = h end
@@ -7444,6 +7510,9 @@ ok("pick: a voice with gaps: weights of its own tiers", ns.VoicePick(FV, hT1) ==
 local p1 = ns.VoicePick(FV, hT1, 15)
 ok("pick: a 1-sound tier twice = the next tier (fixed order)", p1 == 16 or p1 == 17, p1)
 ok("pick: the last tier wraps to the first", ns.VoicePick(FV, hT5, 18) == 15)
+local f20, f219, f220 = ns.VoicePick(FV, 20), ns.VoicePick(FV, 219), ns.VoicePick(FV, 220)
+ok("pick: a voice with no legend: 20-219 = a normal tier, 220-719 still Classic (1 in 200 for every voice)",
+	f20 >= 15 and f20 <= 18 and f219 >= 15 and f219 <= 18 and f220 <= 14, f20 .. " " .. f219 .. " " .. f220)
 
 -- pools on the wire
 ns.EMOTES.CHEER = { folder = "cheer", sounds = { { file = "01_a" }, { file = "02_b" } } }
@@ -8035,6 +8104,144 @@ TS.fontW = nil
 ok("legend rows + fit: nothing forbidden, no chat line", #forbidden == forb0 and #sent == 0, forbidden[#forbidden])
 V.Wait(12)
 end)()
+
+;(function()   -- 0.7.1: the Classic tier (the old 14 for every voice, 1 in 200): wire, seed, counts, log;
+-- 0.7.1 -> old clients (undo); ERR dedupe (one line per site + a count)
+local V = SY.V7
+local QG2, RG = "Player-1-0000D1D1", "Player-1-0000D2D2"
+local function SLine(s)
+	for k = #SpokenWindDB.sync, 1, -1 do
+		local l = SpokenWindDB.sync[k]
+		if l:find(s, 1, true) then return l end
+	end
+	return ""
+end
+local function LN(s)
+	local k = 0
+	for _, l in ipairs(SpokenWindDB.log) do if l:find(s, 1, true) then k = k + 1 end end
+	return k
+end
+local function LL(s)
+	for k = #SpokenWindDB.log, 1, -1 do
+		local l = SpokenWindDB.log[k]
+		if l:find(s, 1, true) then return l end
+	end
+	return ""
+end
+V.R = { [ME_GUID] = { "Human", 2 }, [QG2] = { "Gnome", 2 }, [RG] = { "Orc", 3 } }
+V.Boot(nil)
+local snd = ns.EMOTES.FART.sounds
+SY.force = 13
+local pool, num, i = V.Own()
+ok("classic: own Classic pick (#13) = F pool 0 + the old number, plays it", pool == 0 and num == 13 and i == 13,
+	tostring(pool) .. " " .. tostring(num) .. " " .. tostring(i))
+local cl = SLine("CLASSIC pick")
+ok("classic: a CLASSIC pick line (own=1), no names, no GUIDs", cl:find(" CLASSIC pick snd=13 own=1$") ~= nil
+	and not cl:find("Player-", 1, true) and not cl:find(ME, 1, true), cl)
+ok("classic: #13 from a voice = Legend Has It", ns.AchHas("legend") == true)
+V.Wait(12)
+SY.force = 5
+i = V.Other(QG2, "Quin")
+ok("classic: seed path (a voice, no addon) = the Classic sound + its line (own=0)", i == 5
+	and V.SyncHas("CLASSIC pick snd=5 own=0") == 1, tostring(i))
+V.Wait(12)
+SY.force = nil
+i = V.Other(RG, "Rae", V.F(RG, 9, 0, 1))
+ok("classic: F pool 0 #9 from a voice (a 0.7.1 Classic) = that old sound", i == 9, tostring(i))
+V.Wait(12)
+local nCl = V.SyncHas("CLASSIC pick")
+SY.force = 20
+pool, num, i = V.Own()
+SY.force = nil
+ok("classic: a pack sound = pool 1, no CLASSIC line", pool == 1 and num == 6 and i == 20 and V.SyncHas("CLASSIC pick") == nCl,
+	tostring(pool) .. " " .. tostring(num) .. " " .. V.SyncHas("CLASSIC pick"))
+V.Wait(12)
+for k = 1, 14 do SY.force = k V.Own() V.Wait(12) end
+SY.force = nil
+local dexAll = true
+for k = 1, 14 do if not SpokenWindDB.dex[snd[k].file] then dexAll = false end end
+ok("classic: the 14 by Classic picks = Full Orchestra + all 14 in the Collection", ns.AchHas("orchestra") == true and dexAll
+	and V.NoErr(), select(2, V.NoErr()))
+local SAVE = V.Copy(SpokenWindDB)   -- a 0.7.1 save (Classic plays), for the undo test below
+local n0 = V.SyncHas("CLASSIC pick")
+SY.force = 3
+for _ = 1, 25 do ns.SyncCount("FART", QG2) end
+SY.force = nil
+ev.scripts.OnEvent(ev, "PLAYER_LOGOUT")
+ok("classic: max 20 CLASSIC lines per session; SYNC SUM classic = all Classic picks", n0 < 20
+	and V.SyncHas("CLASSIC pick") == 20 and SLine(" SYNC SUM "):find(" classic=" .. (n0 + 25) .. "$") ~= nil,
+	n0 .. " " .. SLine(" SYNC SUM "))
+
+-- 0.7.1 -> old clients (undo): the save loads; a Classic F (pool 0 #13 from a voice) = #13 Legend
+local keep = ADDON_DIR
+for _, v in ipairs({ "0.6.2", "0.6.3", "0.6.4", "0.6.5", "0.6.6", "0.7.0" }) do
+	ADDON_DIR = ROOT .. "/tests/compat/" .. v
+	local okAll, err = pcall(function()
+		ev, ns = Load(V.Copy(SAVE), "vertical")
+		IsInGroup = function() return true end
+		IsInGuild = function() return true end
+		GetPlayerInfoByGUID = V.Info
+		SpokenWindDB.cd = 0
+		willPlay = true
+		ok(v .. " compat 0.7.1: a 0.7.1 save loads, no error", LastLog():find("BOOT v=" .. v .. " ", 1, true) ~= nil
+			and V.NoErr(), select(2, V.NoErr()))
+		V.Wait(5)
+		local np = #plays
+		local got = V.Other(RG, "Rae", V.F(RG, 13, 0, 7))
+		ok(v .. " compat 0.7.1: F pool 0 #13 from a voice (a Classic pick) = #13 Legend, no error", got == 13
+			and #plays == np + 1 and plays[#plays].path:find("\\13_legend%.ogg$") ~= nil and V.NoErr(), tostring(got))
+	end)
+	ok(v .. " compat 0.7.1: ran without a Lua error", okAll, err)
+end
+ADDON_DIR = keep
+
+-- ERR dedupe: one line per site (kind + file:line) + a count; one bug cannot flush the log
+V.Boot(nil)
+for k = 1, 5 do ns.Log("BTN fart tgt=0 has=? " .. k) end
+local E1 = "ERR rand Interface/AddOns/Spoken_Wind/Random.lua:283: bad argument #1 to 'ipairs' (table expected, got secret)"
+local E2 = "ERR rand Interface/AddOns/Spoken_Wind/Random.lua:302: bad argument #1 to 'ipairs' (table expected, got secret)"
+for _ = 1, 157 do ns.Log(E1) end
+for _ = 1, 3 do ns.Log(E2) end
+ok("errdup: 157 x one ERR = one line + x157; another site = its own line + x3", LN("Random.lua:283") == 1
+	and LL("Random.lua:283"):sub(-5) == " x157" and LN("Random.lua:302") == 1 and LL("Random.lua:302"):sub(-3) == " x3",
+	LL("Random.lua:283"))
+ok("errdup: the 5 BTN lines stay (the flood does not push them out)", LN("BTN fart tgt=0") == 5, LN("BTN fart tgt=0"))
+ns.Log("ERR rand Interface/AddOns/Spoken_Wind/Random.lua:283: other text")
+ok("errdup: same kind + file:line, other text = the same site", LN("Random.lua:283") == 1
+	and LL("Random.lua:283"):sub(-5) == " x158", LL("Random.lua:283"))
+ns.Log("ERR art Interface/AddOns/Spoken_Wind/Random.lua:283: x")
+ok("errdup: another kind, same file:line = its own line", LN("Random.lua:283") == 2 and LL("ERR art "):sub(-3) == ": x",
+	LL("ERR art "))
+ns.Log("ERR play boom") ns.Log("ERR play boom") ns.Log("ERR play bang")
+ok("errdup: no file:line = the text is the site", LN("ERR play boom") == 1 and LL("ERR play boom"):sub(-3) == " x2"
+	and LN("ERR play bang") == 1 and LL("ERR play bang"):sub(-9) == "play bang", LL("ERR play boom"))
+for k = 1, 60 do ns.Log("PLAY filler " .. k) end
+ns.Log("ERR play boom")
+ok("errdup: first line out of the ring = one new line with the count", LN("ERR play boom") == 1
+	and LL("ERR play boom"):sub(-3) == " x3" and #SpokenWindDB.log == 60, LL("ERR play boom"))
+ns.Log("ERR play boom")
+ok("errdup: that new line counts on", LN("ERR play boom") == 1 and LL("ERR play boom"):sub(-3) == " x4", LL("ERR play boom"))
+for _ = 1, 50 do ns.SyncLog("ERR art Interface/AddOns/Spoken_Wind/Shart.lua:86: boom") end
+ok("errdup: the sync ring too", V.SyncHas("Shart.lua:86") == 1 and SLine("Shart.lua:86"):sub(-4) == " x50", SLine("Shart.lua:86"))
+ns.Log("ERR heard Interface/AddOns/Spoken_Wind/Heard.lua:9: both")
+ns.SyncLog("ERR heard Interface/AddOns/Spoken_Wind/Heard.lua:9: both")
+ok("errdup: one ERR in both logs = its first line in each (no count)", LN("Heard.lua:9") == 1
+	and LL("Heard.lua:9"):sub(-4) == "both" and V.SyncHas("Heard.lua:9") == 1 and SLine("Heard.lua:9"):sub(-4) == "both",
+	SLine("Heard.lua:9"))
+V.Boot(nil)
+for k = 1, 25 do for _ = 1, 2 do ns.Log(("ERR s%d a.lua:%d: x"):format(k, k)) end end
+local c1, c2 = 0, 0
+for k = 1, 25 do
+	local key = ("ERR s%d a.lua:%d:"):format(k, k)
+	if k <= 20 and LN(key) == 1 and LL(key):sub(-3) == " x2" then c1 = c1 + 1 end
+	if k > 20 and LN(key) == 2 then c2 = c2 + 1 end
+end
+ok("errdup: 20 sites with a count per log, then plain lines (bounded)", c1 == 20 and c2 == 5, c1 .. " " .. c2)
+V.R = {}
+GetPlayerInfoByGUID, IsInGroup, IsInGuild = nil, nil, nil
+SY.force = nil
+end)()
+
 
 ;(function()   -- 0.7.0 -> old clients (undo): pack F messages + a 0.7.0 save on 0.6.2-0.6.6 (tests/compat/<v>)
 local V = SY.V7

@@ -23,6 +23,8 @@
 --   RAND skip why=off|login|dead|afk|stealth|cast|cine|logout|bag|camp|wake|target|block|noapi|err.
 --   Aura probe (own cap PROBE_MAX, log only): RAND aura +ID name / RAND aura -ID, for the bag,
 --   campfire and rest auras only (spell ID + spell name). SYNC SUM ... rfart=N (Sync.lua).
+--   Aura data the game hides (a secret value, 0.7.1): that event is skipped (no probe, no aura check,
+--   so no fart from it); one RAND aura secret line per session; SYNC SUM ... rsec=N.
 local ADDON, ns = ...
 
 local R = { min = 2700, span = 1800, tick = 15, login = 60, take = 3, logMax = 60,
@@ -61,6 +63,7 @@ local tgtName     -- the target's name at the last random fart: the echo check o
 local bagOn, campOn, campT, logT   -- aura state (a hidden answer keeps the last one); campfire last seen; logout start
 local wk, seq = nil, 0   -- the wake-up that runs; seq: a new one (or its end) = its old timers do nothing
 local nProbe, probeSeen, probeGone, probeInst = 0, {}, {}, {}
+local nHid = 0   -- aura events with hidden (secret) data, skipped
 
 local function Secret(v) return issecretvalue and issecretvalue(v) end
 
@@ -276,13 +279,25 @@ Poll = function(now)
 	end
 end
 
+-- Aura data the game hides (a secret value): state unknown. One log line per session.
+local function Hidden()
+	nHid = nHid + 1
+	if nHid == 1 then Log("RAND aura secret") end
+	return true
+end
+
 -- Log only: which auras this client uses for the bag, the campfire and rest (spell ID + spell name).
+-- Returns true when the game hides the data (a secret value): the caller skips this event.
 local function Probe(info)
-	if nProbe >= R.probeMax or type(info) ~= "table" or Secret(info) then return end
-	if type(info.addedAuras) == "table" then
-		for _, a in ipairs(info.addedAuras) do
+	if Secret(info) then return Hidden() end
+	if type(info) ~= "table" then return false end
+	local added, removed = info.addedAuras, info.removedAuraInstanceIDs
+	if Secret(added) or Secret(removed) then return Hidden() end
+	if nProbe >= R.probeMax then return false end
+	if type(added) == "table" then
+		for _, a in ipairs(added) do
 			local id, name, inst
-			if type(a) == "table" then id, name, inst = a.spellId, a.name, a.auraInstanceID end
+			if type(a) == "table" and not Secret(a) then id, name, inst = a.spellId, a.name, a.auraInstanceID end
 			if type(id) == "number" and not Secret(id) and not Secret(name) and not Secret(inst) then
 				name = type(name) == "string" and name or ""
 				local hit = R.probeIds[id]
@@ -298,8 +313,8 @@ local function Probe(info)
 			end
 		end
 	end
-	if type(info.removedAuraInstanceIDs) == "table" then
-		for _, inst in ipairs(info.removedAuraInstanceIDs) do
+	if type(removed) == "table" then
+		for _, inst in ipairs(removed) do
 			local id = not Secret(inst) and probeInst[inst]
 			if id then
 				probeInst[inst] = nil
@@ -310,6 +325,7 @@ local function Probe(info)
 			end
 		end
 	end
+	return false
 end
 
 -- The 15 s tick: the auras; nothing before the due time; then the first tick with no reason fires.
@@ -402,7 +418,7 @@ function ns.RandEvent(event, a1, a2)
 		if firing or (firedT and GetTime() - firedT <= R.take) or fn:find("Emote") then Stop("block") end
 	elseif event == "UNIT_AURA" then
 		if a1 ~= "player" then return end
-		Probe(a2)
+		if Probe(a2) then return end   -- hidden aura data: state unknown, no aura check this time (no fart)
 		if loginT and not stopped then Poll(GetTime()) end
 	elseif event == "PLAYER_CAMPING" or event == "PLAYER_QUITING" then logT = GetTime()
 	elseif event == "LOGOUT_CANCEL" then logT = nil
@@ -433,6 +449,7 @@ function ns.RandStatus()
 end
 
 function ns.RandSum() return nRand end
+function ns.RandHid() return nHid end
 function ns.RandBoot()
 	local aur = (C_UnitAuras and C_UnitAuras.GetPlayerAuraBySpellID or GetPlayerAuraBySpellID) and 1 or 0
 	return ("rnd=%d tgt=%d aur=%d"):format(db.random and 1 or 0, db.randTgt and 1 or 0, aur)

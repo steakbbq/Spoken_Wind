@@ -82,11 +82,42 @@ local function Usable(v)
 	return type(v) == "string" and v ~= "" and not (issecretvalue and issecretvalue(v))
 end
 
-local function SLog(s)
-	local log = db.sync
-	log[#log + 1] = date("%m-%d %H:%M:%S") .. " " .. s
-	while #log > SYNC_MAX do table.remove(log, 1) end
+-- The site of an ERR line: its kind ("ERR rand") + the first file:line in it, else its first 80 characters.
+local function ErrSite(s)
+	return (s:match("^ERR %S+") or "ERR") .. " " .. (s:match("[%w_]+%.lua:%d+") or s:sub(1, 80))
 end
+
+local ERR_SITES = 20     -- ERR sites per log per session with a count (more: plain lines)
+local errSeen = {}       -- log table -> { n = sites, [site] = { line = its text in the log, n = count } }
+
+-- One line into a log ring (max lines, oldest out). A repeated ERR line (same site, this session) adds no
+-- line: its first line gets a count (" x2", " x3" ...). One bug cannot flush the log. First line gone from
+-- the ring = one new line with the count.
+local function LogPut(log, max, s)
+	local line = date("%m-%d %H:%M:%S") .. " " .. s
+	if s:sub(1, 4) == "ERR " then
+		local seen = errSeen[log]
+		if not seen then seen = { n = 0 } errSeen[log] = seen end
+		local site = ErrSite(s)
+		local e = seen[site]
+		if e then
+			e.n = e.n + 1
+			local text = e.base .. " x" .. e.n
+			for j = #log, 1, -1 do
+				if log[j] == e.line then log[j], e.line = text, text return end
+			end
+			line, e.line = text, text
+		elseif seen.n < ERR_SITES then
+			seen.n = seen.n + 1
+			seen[site] = { line = line, base = line, n = 1 }
+		end
+	end
+	log[#log + 1] = line
+	while #log > max do table.remove(log, 1) end
+end
+ns.LogPut = LogPut
+
+local function SLog(s) LogPut(db.sync, SYNC_MAX, s) end
 ns.SyncLog = SLog
 
 local function Ms(dt) return math.floor(dt * 1000 + 0.5) end
@@ -137,6 +168,8 @@ local function Prune(t, old)
 	for key, v in pairs(t) do if old(v) then t[key] = nil end end
 end
 
+local CLASSIC_LOG, nClassic = 20, 0   -- CLASSIC pick lines per session (max); Classic picks (SUM classic=)
+
 -- One more fart from guid: the next seed pick. Returns snd, step, k.
 local function Count(token, guid)
 	local step = Step()
@@ -148,6 +181,12 @@ local function Count(token, guid)
 	local snd
 	if v then   -- a voice: tier first (Voices.lua), same hash input as the old pick
 		snd = ns.VoicePick(v, Hash(("%s:%s:%d:%d"):format(token, guid, step, k)), avoid)
+		if snd <= ns.BASE_N then   -- the Classic tier (one of the old 14)
+			nClassic = nClassic + 1
+			if nClassic <= CLASSIC_LOG then
+				SLog(("CLASSIC pick snd=%d own=%d"):format(snd, UnitGUID and guid == UnitGUID("player") and 1 or 0))
+			end
+		end
 	else
 		snd = ns.SeedPick(token, guid, step, k, n, avoid)
 	end
@@ -617,5 +656,7 @@ function ns.SyncSum()
 	parts[#parts + 1] = "sCapped=" .. (ns.BoardCaps and (ns.BoardCaps()) or 0)
 	parts[#parts + 1] = "btn=" .. (ns.BtnSums and ns.BtnSums() or "0.0.0.0")
 	parts[#parts + 1] = "rfart=" .. (ns.RandSum and ns.RandSum() or 0)   -- random farts (Random.lua)
+	parts[#parts + 1] = "rsec=" .. (ns.RandHid and ns.RandHid() or 0)   -- hidden (secret) aura events skipped
+	parts[#parts + 1] = "classic=" .. nClassic
 	SLog("SYNC SUM " .. table.concat(parts, " "))
 end

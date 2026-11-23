@@ -12,7 +12,7 @@
 -- One sound per person at a time: a person is busy from the play start for
 -- max(cd, the sound's length) (ns.LEN, Lengths.lua, made from the ogg files).
 local ADDON, ns = ...
-local VERSION = "0.7.0"
+local VERSION = "0.7.1"
 local TAG = "|cff9fd8a8Spoken Wind|r"
 local SLASH = "/wind"
 local CHANNELS = { master = "Master", sfx = "SFX", dialog = "Dialog" }
@@ -32,11 +32,7 @@ local lenMiss = {}
 local panel = "none"
 local sums = { seen = 0, hit = 0, played = 0, nosound = 0, cd = 0, off = 0, selfskip = 0, err = 0 }
 
-local function Log(s)
-	local log = db.log
-	log[#log + 1] = date("%m-%d %H:%M:%S") .. " " .. s
-	while #log > LOG_MAX do table.remove(log, 1) end
-end
+local function Log(s) ns.LogPut(db.log, LOG_MAX, s) end   -- Sync.lua: the ring + ERR dedupe
 ns.Log = Log
 
 local function Secret(v) return issecretvalue and issecretvalue(v) end

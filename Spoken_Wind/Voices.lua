@@ -5,9 +5,11 @@
 -- Voice = the race + body of a GUID (GetPlayerInfoByGUID). No voice (another race, no answer, a hidden
 -- answer) = the old 14 (pool 0, the 0.6.x math, unchanged).
 -- Pick (pool 1): the TIER first, from the seed hash, with the odds of the picking page (settings/odds v2):
---   Artifact 1 in 5000, the voice legend 1 in 500, the rest by the tier weights (poor 25, common 35,
---   uncommon 22, rare 13, epic 5) of the tiers the voice has. Then the sound in the tier, never the one
---   before it in this step. Whole-number math only: every client gets the same sound.
+--   Artifact 1 in 5000, the voice legend 1 in 500, Classic 1 in 200 (0.7.1), the rest by the tier weights
+--   (poor 25, common 35, uncommon 22, rare 13, epic 5) of the tiers the voice has. Then the sound in the
+--   tier, never the one before it in this step. Whole-number math only: every client gets the same sound.
+-- Classic (0.7.1): the old 14 for every voice, each the same odds (1 in 14, as in 0.6.x). It goes on the
+--   wire as pool 0 + the old number, so 0.6.x clients play the same sound.
 -- Messages: F carries pool 1 + num. 0.6.2-0.6.6 drop a pool they do not have (no sound, no send, no error).
 -- A pack that does not load (a hole in 1-1337) = no pool 1 at all: everyone plays the old 14.
 local _, ns = ...
@@ -28,7 +30,8 @@ local PACKS = {   -- the order of the Collection pages; dir = the folder in Medi
 	{ t = "SW1337_ARTIFACT", dir = "artifact", name = "Artifact", art = true },
 }
 local TIER = { poor = 1, common = 2, uncommon = 3, rare = 4, epic = 5, legendary = 6, artifact = 7 }
-local ODDS = { scale = 100000, art = 20, legend = 200, w = { 25, 35, 22, 13, 5 } }   -- 20 = 1 in 5000, 200 = 1 in 500
+local ODDS = { scale = 100000, art = 20, legend = 200, classic = 500, w = { 25, 35, 22, 13, 5 } }
+-- 20 = 1 in 5000, 200 = 1 in 500, 500 = 1 in 200 (of hash % 100000)
 local SET_N = 1337
 local MISS_MAX = 10   -- VOX miss lines per session
 local M = 2147483647
@@ -38,6 +41,9 @@ local SEX = { [2] = "m", [3] = "f" }
 -- art = { i, ... } (num order); slot[i] = the slot name of an Artifact sound; set = the pack sounds loaded
 local VOX = { base = BASE, odds = ODDS, voices = {}, order = {}, art = {}, slot = {}, set = 0, ok = false, bad = 0 }
 ns.VOX = VOX
+local CLASSIC = {}   -- the Classic tier: the old 14 (sound i 1-14)
+for i = 1, BASE do CLASSIC[i] = i end
+VOX.classic = CLASSIC
 local nMiss, missSeen = 0, {}
 
 local function Secret(v) return issecretvalue and issecretvalue(v) end
@@ -137,7 +143,8 @@ function ns.VoicePick(v, h, avoid)
 	local h2 = (h * 48271) % M
 	local list
 	if u < ODDS.art and #VOX.art > 0 then list = VOX.art
-	elseif u < ODDS.art + ODDS.legend and v.tiers[6] then list = v.tiers[6] end
+	elseif u < ODDS.art + ODDS.legend then list = v.tiers[6]
+	elseif u < ODDS.art + ODDS.legend + ODDS.classic then list = CLASSIC end
 	if list and #list == 1 and list[1] == avoid then list = nil end   -- the legend twice in a step: a normal tier
 	if not list then
 		local x, tier = h2 % v.w, nil
