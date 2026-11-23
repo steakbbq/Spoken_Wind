@@ -395,7 +395,7 @@ local function Load(db, mode, dev)
 		if not line:match("^##") and line:match("%S") then files[#files + 1] = line:match("^%s*(.-)%s*$") end
 	end
 	for _, file in ipairs(files) do   -- SY.noPacks: the race packs do not load (= the old 14 only)
-		if not (SY.noPacks and file:find("^Packs[\\/]")) then assert(loadfile(ADDON_DIR .. "/" .. file))("Spoken_Wind", ns) end
+		if not (SY.noPacks and file:find("^Packs[\\/]")) then assert(loadfile(ADDON_DIR .. "/" .. (file:gsub("\\", "/"))))("Spoken_Wind", ns) end
 	end
 	local ev = frames[1]
 	ev.scripts.OnEvent(ev, "ADDON_LOADED", "SomethingElse")
@@ -2891,7 +2891,7 @@ end
 	local hits = {}
 	for line in ptoc:gmatch("[^\r\n]+") do
 		if not line:match("^##") and line:match("%S") then
-			local src = assert(io.open(ADDON_DIR .. "/" .. line:match("^%s*(.-)%s*$"), "rb")):read("*a")
+			local src = assert(io.open(ADDON_DIR .. "/" .. (line:match("^%s*(.-)%s*$"):gsub("\\", "/")), "rb")):read("*a")
 			for _, w in ipairs({ "DEV ach", "real restore", "ach fire", "stats reset", "dev ach" }) do
 				if src:find(w, 1, true) then hits[#hits + 1] = line .. ":" .. w end
 			end
